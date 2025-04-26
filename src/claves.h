@@ -28,7 +28,7 @@ No existe el usuario = 1 -> CONNECT FAIL, USER DOES NOT EXIST
 Usuario ya conectado = 2 -> USER ALREADY CONNECTED
 Error = 3 -> CONNECT FAIL
 */
-int connect(char* username);
+int connect(char* username, char* port);
 
 /*
 Desconecta al cliente del sistema.
@@ -92,15 +92,21 @@ int getfile(char * username_solicitante, char *  username, char * remote_file_ma
 /*
 Comprueba si un usuario está registrado.
 Éxito = Estructura con el nodo
-Error = Estructura con error = 1
+Error = Estructura con error = -1
 */
 Exist is_registered(char * username);
 
 /*
 Comprueba si un usuario está conectado.
 Éxito = Estructura con los datos de la conexion
-Error = Estructura con error = 1
+Error = Estructura con error = -1
 */
 Conexion is_connected(char * username);
 
+/*
+Comprueba si un fichero esta publicado.
+Éxito = Estructura con la publicacion
+Error = Estructura con error = -1
+*/
+Published is_published(char * file_name, Lista_publicaciones * publicaciones);
 #endif

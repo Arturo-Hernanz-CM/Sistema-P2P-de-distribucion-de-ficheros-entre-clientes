@@ -9,12 +9,13 @@ typedef struct Nodo{
     Datos_conexion * datos_conexion;        // Estructura con los datos de la conexión actual
     Lista_publicaciones * publicaciones;    // Estructura con las publicaciones del usuario
 
-    struct Nodo *siguiente;
+    Nodo *siguiente;
+    Nodo *anterior;
 }Nodo;
 
 typedef struct Datos_conexion{
     char * ip;
-    int port;
+    char * port;
 }Datos_conexion;
 
 typedef struct Lista{
@@ -29,6 +30,9 @@ typedef struct Publicacion{
     int index;
     char * filename;
     char * descripcion;
+
+    Publicacion *anterior;
+    Publicacion *siguiente;
 }Publicacion;
 
 typedef struct Lista_publicaciones{
@@ -48,6 +52,11 @@ typedef struct Conexion{
     int error;
     Datos_conexion * datos_conexion;
 }Conexion;
+
+typedef struct Published{
+    int error;
+    Publicacion * publicacion;
+}Published;
 
 typedef struct{
     char username[256];  
