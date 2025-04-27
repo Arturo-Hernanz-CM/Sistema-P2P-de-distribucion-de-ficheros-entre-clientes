@@ -59,34 +59,6 @@ Error = 4 -> DELETE FAIL
 */
 int delete(char * username_solicitante, char * file_name);
 
-/*
-Murestra la lista de usuarios conectados al usuario que lo pide.
-Éxito = 0  -> LIST_USERS OK (USER1 IP1 PORT1 \n ...)
-Usuario no existe = 1 -> LIST_USERS FAIL, USER DOES NOT EXIST
-Usuario no conectado = 2 -> LIST_USERS FAIL, USER NOT CONNECTED
-Error = 3 -> LIST_USERS FAIL
-*/
-int listusers(char * username_solicitante);
-
-/*
-Muestra la lista de contenidos publicados por el usuario buscado al usuario que lo pide. 
-Éxito = 0  -> LIST_CONTENT OK (file_name_1 \n ...)
-Usuario no existe = 1 -> LIST_CONTENT FAIL, USER DOES NOT EXIST
-Usuario no conectado = 2 -> LIST_CONTENT FAIL, USER NOT CONNECTED
-No existe el usuario buscado = 3 -> LIST_CONTENT FAIL, REMOTE USER DOES NOT EXIST
-Error = 4 -> LIST_CONTENT FAIL
-*/
-int listcontent(char * username_solicitante, char * username);
-
-/*
-Descarga el fichero de un usuario al usuario que lo pide.
-Éxito = 0 -> GET_FILE OK
-No existe el fichero = 1 -> GET_FILE FAIL, FILE DOES NOT EXIST
-Error = 2 -> GET_FILE FAIL
-*/
-int getfile(char * username_solicitante, char *  username, char * remote_file_mame, char * local_file_mame);
-
-
 // Funciones auxiliares
 
 /*

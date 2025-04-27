@@ -1,4 +1,4 @@
-#include "proxy-sock.h"
+#include "proxy.h"
 #include "lines.h"
 #include <stdint.h>
 #include <stdio.h> 
@@ -18,24 +18,6 @@ char *puerto_servidor_char;
 
 
 // Funciones
-
-// Serializar double
-uint64_t serializar_double(double value){
-    uint64_t v_value2;
-    memcpy(&v_value2, &value, sizeof(value));
-    return htobe64(v_value2);
-}
-
-// Deserializar double
-double deserializar_double(uint64_t v_value2){
-    uint64_t value2;
-    double result;
-
-    value2 = be64toh(v_value2);
-    memcpy(&result, &value2, sizeof(value2));
-    return result;
-}
-
 
 // Enviar peticion
 int enviar_peticion(int socket_cliente_descriptor, Peticion * peticion){
@@ -172,7 +154,7 @@ int recibir_get_value(int socket_cliente_descriptor, Peticion * resp){
     return 0;
 }
 
-int tratar_peticion(Peticion * peticion) {
+int comunicacion_servidor(Peticion * peticion) {
 
     // Variables de entorno
     ip_servidor = getenv("IP_TUPLAS");
@@ -283,122 +265,47 @@ int tratar_peticion(Peticion * peticion) {
     return 0;
 }
 
-int destroy(void){
-    // Valores a asignar a la peticion
-    struct Coord value3 = {0, 0};
+// Funcion para registrar un nuevo usuario
+int register_user(char* username) {
 
-    // Asignacion de valores a la estructura
-    peticion.key = 0;
-    peticion.N_value2 = 0;
-    peticion.value3 = value3;
-    peticion.operacion = 0;
-
-    if (tratar_peticion(&peticion) == -1){
-        perror("ERROR:\nFile: proxy-sock.c\nFunction: destroy\nError: Error al destruir");
-        return -1;
-    }
-
-    printf("Lista destruida.\n");
-    return 0;
 }
-int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3){
-    // Asignacion de valores a la estructura
-    peticion.key = key;
-    strcpy(peticion.value1, value1);
-    peticion.N_value2 = N_value2;
-    memcpy(&peticion.value2, V_value2, N_value2*sizeof(double));
-    peticion.value3 = value3;
-    peticion.operacion = 1;
 
-    if (tratar_peticion(&peticion) == -1){
-        perror("ERROR:\nFile: proxy-sock.c\nFunction: set_value\nError: Error al hacer set");
-        return -1;
-    }
+// Funcion para dar de baja a un usuario
+int unregister(char* username) {
 
-    printf("Mensaje guardado en la lista.\n");
-    return 0;
 }
-int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3){
-    // Asignacion de valores a la estructura
-    peticion.key = key;
-    strcpy(peticion.value1, value1);
-    peticion.N_value2 = 0;
-    peticion.value3 = *value3;
-    memcpy(&peticion.value3, value3, sizeof(struct Coord));
-    peticion.operacion = 2;
+
+// Funcion para conectar al cliente al sistema
+int connect(char* username) {
     
-    if (tratar_peticion(&peticion) == -1){
-        perror("ERROR:\nFile: proxy-sock.c\nFunction: get_value\nError: Error al hacer get");
-        return -1;
-    }
+}
 
-    // Escribir la respuesta en los valores que se pasan como argumentos
-    strcpy(value1, peticion.value1);
-    *N_value2 = peticion.N_value2;
-    memcpy(V_value2, &peticion.value2, (*N_value2)*sizeof(double));
-    *value3 = peticion.value3;
-
-    printf("\nDatos de la clave %d recuperados:\n", key);
-    printf("\tvalue1: %s\n", value1);
-    printf("\tN_value2: %d\n", *N_value2);
-    for (int i = 0; i < *N_value2; i++){
-        printf("\tvalue2[%d]: %f\n", i, V_value2[i]);
-    }
-    printf("\tvalue3.x: %d\n", value3->x);
-    printf("\tvalue3.y: %d\n", value3->y);
+// Funcion para desconectar al cliente del sistema
+int disconnect(char* username) {
     
-    return 0;
 }
-int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3){
-    // Asignacion de valores a la estructura
-    peticion.key = key;
-    strcpy(peticion.value1, value1);
-    peticion.N_value2 = 2;
-    memcpy(&peticion.value2, V_value2, sizeof(double));
-    peticion.value3 = value3;
-    peticion.operacion = 3;
 
-    if (tratar_peticion(&peticion) == -1){
-        perror("ERROR:\nFile: proxy-sock.c\nFunction: modify_value\nError: Error al modificar");
-        return -1;
-    }
-
-    printf("Datos modificados.\n");
-    return 0;
-}
-int delete_key(int key){
-    // Valores a asignar a la peticion
-    struct Coord value3 = {0, 0};
-
-    // Asignacion de valores a la estructura
-    peticion.key = key;
-    peticion.N_value2 = 0;
-    peticion.value3 = value3;
-    peticion.operacion = 4;
+// Funcion para publicar un fichero
+int publish(char * username_publisher, char* file_name, char* descripcion) {
     
-    if (tratar_peticion(&peticion) == -1){
-        perror("ERROR:\nFile: proxy-sock.c\nFunction: delete_key\nError: Error al borrar");
-        return -1;
-    }
-
-    printf("Datos asociados a la clave destruidos.\n");
-    return 0;
 }
-int exist(int key){
-    // Valores a asignar a la peticion
-    struct Coord value3 = {0, 0};
 
-    // Asignacion de valores a la estructura
-    peticion.key = key;
-    peticion.N_value2 = 0;
-    peticion.value3 = value3;
-    peticion.operacion = 5; 
+// Funcion para borrar un fichero
+int delete(char * username_solicitante, char * file_name) {
+    
+}
 
-    if (tratar_peticion(&peticion) == -1){
-        perror("ERROR:\nFile: proxy-sock.c\nFunction: exist\nError: Error al comprobar existencia");
-        return -1;
-    }
+// Funcion para obtener los usuarios
+int listusers(void) {
+    
+}
 
-    printf("Clave encontrada.\n");
-    return 0;
+// Funcion para obtener los ficheros
+int listcontent(char * username) {
+    
+}
+
+// Funcion para obtener un fichero
+int get_file(char * username, char * remote_filename, char * local_filename) {
+    
 }

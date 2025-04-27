@@ -1,0 +1,4 @@
+- listuser y listcontent lo hace el servidor sin acceder a claves, no es una operación sobre la 
+base de datos, sino una lectura sobre esta.
+
+- getfile no lo hace el servidor, es comunicación peer-to-peer.

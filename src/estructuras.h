@@ -60,16 +60,9 @@ typedef struct Published{
 
 typedef struct{
     char username[256];  
-    int N_value2;
-    double value2[32];
-    int operacion;
+    int port;
     /*
-        0 -> destroy
-        1 -> set_value
-        2 -> get_value
-        3 -> modify_value
-        4 -> delete_key
-        5 -> exist
+        0 -> 
     */
 }Peticion;
 

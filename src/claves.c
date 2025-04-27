@@ -96,7 +96,10 @@ int unregister(char* username){
     else{
         // Eliminar el nodo
         exist.nodo_usuario->anterior->siguiente = exist.nodo_usuario->siguiente;
-        exist.nodo_usuario->siguiente->anterior = exist.nodo_usuario->anterior;
+        if(exist.nodo_usuario->siguiente != NULL){
+            exist.nodo_usuario->siguiente->anterior = exist.nodo_usuario->anterior;
+            exist.nodo_usuario->siguiente->index = exist.nodo_usuario->index;
+        }
         base_datos->size--;
         free(exist.nodo_usuario);
     }
@@ -282,95 +285,25 @@ int delete(char * username_solicitante, char * file_name){
         return -1;
     }
 
+    Published published;
+    published = is_published(file_name, exist.nodo_usuario->publicaciones);
+    if(published.error == -1){
+        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El fichero no esta publicado");
+        return -1;
+    }
 
+    // Eliminar el fichero
+    published.publicacion->anterior->siguiente = published.publicacion->siguiente;
+    if(published.publicacion->siguiente != NULL){
+        published.publicacion->siguiente->anterior = published.publicacion->anterior;
+        published.publicacion->siguiente->index = published.publicacion->index;
+    }
+    exist.nodo_usuario->publicaciones->size--;
 
     pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
     return 0;
 }
-
-// Funcion para mostrar la lista de usuarios conectados
-int listusers(char * username_solicitante){
-    pthread_mutex_lock(&mutex_funcion);
-    bloqueado = 1;
-
-    // Comprobaciones
-    Exist exist;
-    exist = is_registered(username_solicitante);
-    if(exist.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no existe");
-        return -1;
-    }
-
-    Conexion conexion;
-    conexion = is_connected(username_solicitante);
-    if(conexion.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no esta conectado");
-        return -1;
-    }
-
-
-
-    pthread_mutex_unlock(&mutex_funcion);
-    bloqueado = 0;
-    return 0;
-}
-
-// Funcion para mostrar la lista de contenidos publicados por un usuario
-int listcontent(char * username_solicitante, char * username){
-    pthread_mutex_lock(&mutex_funcion);
-    bloqueado = 1;
-
-    // Comprobaciones
-    Exist exist;
-    exist = is_registered(username_solicitante);
-    if(exist.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no existe");
-        return -1;
-    }
-
-    Conexion conexion;
-    conexion = is_connected(username_solicitante);
-    if(conexion.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no esta conectado");
-        return -1;
-    }
-
-    
-
-    pthread_mutex_unlock(&mutex_funcion);
-    bloqueado = 0;
-    return 0;
-}
-
-// Funcion para descargar un fichero
-int getfile(char * username_solicitante, char *  username, char * remote_file_mame, char * local_file_mame){
-    pthread_mutex_lock(&mutex_funcion);
-    bloqueado = 1;
-
-    // Comprobaciones
-    Exist exist;
-    exist = is_registered(username_solicitante);
-    if(exist.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no existe");
-        return -1;
-    }
-
-    Conexion conexion;
-    conexion = is_connected(username_solicitante);
-    if(conexion.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no esta conectado");
-        return -1;
-    }
-
-    
-
-    pthread_mutex_unlock(&mutex_funcion);
-    bloqueado = 0;
-    return 0;
-}
-
-
 
 // Funciones Auxiliares
 // Comprobar si el usuario esta registrado
