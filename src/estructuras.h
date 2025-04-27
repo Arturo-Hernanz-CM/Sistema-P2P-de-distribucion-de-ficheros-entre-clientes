@@ -60,9 +60,21 @@ typedef struct Published{
 
 typedef struct{
     char username[256];  
-    int port;
+    char username2[256];
+    char filename1[256];
+    char description[256];
+    char filename2[256];
+    int operacion;
     /*
-        0 -> 
+        0 -> register
+        1 -> unregister
+        2 -> connect
+        3 -> disconnect
+        4 -> publish
+        5 -> delete
+        6 -> listusers
+        7 -> listcontent
+        8 -> getfile
     */
 }Peticion;
 

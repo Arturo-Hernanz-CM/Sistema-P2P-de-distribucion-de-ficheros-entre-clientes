@@ -16,6 +16,13 @@ int register_user(char* username){
     pthread_mutex_lock(&mutex_funcion);
 
     // Comprobaciones
+    if(sizeof(*username) > 256){
+        perror("ERROR:\nFile: claves.c\nFunction: register_user\nError: El username es demasiado largo");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
+        return -1;
+    }
+
     Exist exist;
     exist = is_registered(username);
     if(exist.error == 0){
@@ -85,6 +92,8 @@ int unregister(char* username){
     exist = is_registered(username);
     if(exist.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: unregister\nError: El usuario no existe");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
     if(base_datos->size == 1){
@@ -110,7 +119,7 @@ int unregister(char* username){
 }
 
 // Funcion para conectar un usuario
-int connect(char* username, char* port){
+int connect(char* username, char* port, char* ip){
     pthread_mutex_lock(&mutex_funcion);
     bloqueado = 1;
 
@@ -119,6 +128,8 @@ int connect(char* username, char* port){
     exist = is_registered(username);
     if(exist.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: connecect\nError: El usuario no existe");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -126,6 +137,8 @@ int connect(char* username, char* port){
     conexion = is_connected(username);
     if(conexion.error == 0){
         perror("ERROR:\nFile: claves.c\nFunction: connect\nError: El usuario ya esta conectado");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -178,6 +191,8 @@ int disconnect(char* username){
     exist = is_registered(username);
     if(exist.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: disconnect\nError: El usuario no existe");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -185,6 +200,8 @@ int disconnect(char* username){
     conexion = is_connected(username);
     if(conexion.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: disconnect\nError: El usuario no esta conectado");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -203,10 +220,19 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
     bloqueado = 1;
 
     // Comprobaciones
+    if(sizeof(*file_name) > 256){
+        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El nombre del fichero es demasiado largo");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
+        return -1;
+    }
+
     Exist exist;
     exist = is_registered(username_publisher);
     if(exist.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no existe");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -214,6 +240,8 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
     conexion = is_connected(username_publisher);
     if(conexion.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no esta conectado");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -275,6 +303,8 @@ int delete(char * username_solicitante, char * file_name){
     exist = is_registered(username_solicitante);
     if(exist.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no existe");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -282,6 +312,8 @@ int delete(char * username_solicitante, char * file_name){
     conexion = is_connected(username_solicitante);
     if(conexion.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no esta conectado");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 
@@ -289,6 +321,8 @@ int delete(char * username_solicitante, char * file_name){
     published = is_published(file_name, exist.nodo_usuario->publicaciones);
     if(published.error == -1){
         perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El fichero no esta publicado");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 

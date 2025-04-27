@@ -2,3 +2,6 @@
 base de datos, sino una lectura sobre esta.
 
 - getfile no lo hace el servidor, es comunicación peer-to-peer.
+
+- La ip y puerto del servidor no llegan como variables de entorno, pero hasta que apañe el .py 
+se quedan así.
