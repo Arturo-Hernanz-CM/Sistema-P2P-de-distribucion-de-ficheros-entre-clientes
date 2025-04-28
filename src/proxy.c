@@ -221,22 +221,36 @@ int comunicacion_servidor(Peticion * peticion) {
         }
     }*/
 
-    if(peticion->operacion == 6){
-        
-    }
-    else if(peticion->operacion == 7){
+    if(peticion->operacion == 6 || peticion->operacion == 7){
+        char respuesta;
+        int fin_emit;
+        int32_t fin_emit_;
+        if(recvMessage(socket_cliente_descriptor, (char *) &fin_emit_, sizeof(fin_emit_)) == -1) {
+            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
+            close(socket_cliente_descriptor);
+            return -1;
+        }
+        fin_emit = ntohl(fin_emit_);
+        for(int i = 0; i < fin_emit; i++){
+            if(recvMessage(socket_cliente_descriptor, (char *) &respuesta, sizeof(respuesta)) == -1) {
+                perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
+                close(socket_cliente_descriptor);
+                return -1;
+            }
+            printf("%c\n", respuesta);
+        }
         
     }
     else{
         printf("Recibiendo respuesta del servidor.\n");
         if(recvMessage(socket_cliente_descriptor, (char *) &res, sizeof(int32_t)) == -1) {
-            perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: No se puede recibir la respuesta");
+            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
             close(socket_cliente_descriptor);
             return -1;
         }
         respuesta = ntohl(res);
         if (respuesta == -1){
-            perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error en la respuesta");
+            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: Error en la respuesta");
             close(socket_cliente_descriptor);
             return -1;
         }

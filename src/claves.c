@@ -119,20 +119,11 @@ int unregister(char* username){
 }
 
 // Funcion para conectar un usuario
-int connect(char* username, char* port, char* ip){
+int connect_user(char* username, char* port, char* ip){
     pthread_mutex_lock(&mutex_funcion);
     bloqueado = 1;
 
     // Comprobaciones
-    Exist exist;    
-    exist = is_registered(username);
-    if(exist.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: connecect\nError: El usuario no existe");
-        pthread_mutex_unlock(&mutex_funcion);
-        bloqueado = 0;
-        return -1;
-    }
-
     Conexion conexion;
     conexion = is_connected(username);
     if(conexion.error == 0){
@@ -170,10 +161,10 @@ int connect(char* username, char* port, char* ip){
     }
 
     // Guardar los datos
-    if(exist.nodo_usuario->datos_conexion == NULL){
+    if(conexion.exist.nodo_usuario->datos_conexion == NULL){
         strcpy(datos_conexion->ip, ip);
         strcpy(datos_conexion->port, port);
-        memcpy(exist.nodo_usuario->datos_conexion, datos_conexion, sizeof(Datos_conexion));
+        memcpy(conexion.exist.nodo_usuario->datos_conexion, datos_conexion, sizeof(Datos_conexion));
     }
 
     pthread_mutes_unlock(&mutex_funcion);
@@ -187,14 +178,6 @@ int disconnect(char* username){
     bloqueado = 1;
 
     // Comprobaciones
-    Exist exist;
-    exist = is_registered(username);
-    if(exist.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: disconnect\nError: El usuario no existe");
-        pthread_mutex_unlock(&mutex_funcion);
-        bloqueado = 0;
-        return -1;
-    }
 
     Conexion conexion;
     conexion = is_connected(username);
@@ -206,8 +189,8 @@ int disconnect(char* username){
     }
 
     // Eliminar los datos
-    free(exist.nodo_usuario->datos_conexion);
-    exist.nodo_usuario->datos_conexion = NULL;
+    free(conexion.exist.nodo_usuario->datos_conexion);
+    conexion.exist.nodo_usuario->datos_conexion = NULL;
 
     pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
@@ -413,6 +396,7 @@ Conexion is_connected(char * username){
                 pthread_mutex_unlock(&mutex_funcion);
             }
             conexion.error = -1;
+            conexion.exist = exist;
             return conexion;
         }
         else{
@@ -421,6 +405,7 @@ Conexion is_connected(char * username){
                     pthread_mutex_unlock(&mutex_funcion);
                 }
                 conexion.error = -1;
+                conexion.exist = exist;
                 return conexion;
             }
             else{
@@ -428,6 +413,7 @@ Conexion is_connected(char * username){
                     pthread_mutex_unlock(&mutex_funcion);
                 }
                 conexion.error = 0;
+                conexion.exist = exist;
                 memcpy(conexion.datos_conexion, exist.nodo_usuario->datos_conexion, sizeof(Datos_conexion));
                 return conexion;
             }

@@ -28,7 +28,7 @@ No existe el usuario = 1 -> CONNECT FAIL, USER DOES NOT EXIST
 Usuario ya conectado = 2 -> USER ALREADY CONNECTED
 Error = 3 -> CONNECT FAIL
 */
-int connect(char* username, char* port, char* ip);
+int connect_user(char* username, char* port, char* ip);
 
 /*
 Desconecta al cliente del sistema.

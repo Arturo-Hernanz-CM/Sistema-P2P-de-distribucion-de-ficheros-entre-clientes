@@ -50,6 +50,7 @@ typedef struct Exist{
 
 typedef struct Conexion{
     int error;
+    Exist exist;
     Datos_conexion * datos_conexion;
 }Conexion;
 
