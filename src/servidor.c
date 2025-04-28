@@ -21,6 +21,9 @@ pthread_cond_t condicion_mensaje;
 pthread_mutex_t mutex_funcion;
 int ocupado = 0;
 
+int puerto_cliente;
+char ip_cliente[INET_ADDRSTRLEN];
+
 // Funciones
 
 // Recibir la peticion del cliente
@@ -110,7 +113,7 @@ void recibir_socket(int *socket_cliente_descriptor){
         respuesta = unregister(peticion_local.username);
     }
     else if (peticion_local.operacion == 2) {   // Función connect
-        respuesta = connect_user(peticion_local.username, );
+        respuesta = connect_user(peticion_local.username, &puerto_cliente, ip_cliente);
     }
     else if (peticion_local.operacion == 3) {   // Función disconnect
         respuesta = disconnect(peticion_local.username);
@@ -151,15 +154,16 @@ void recibir_socket(int *socket_cliente_descriptor){
                 perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
                 close(socket_cliente_descriptor_local);
             }  
+            nodo = base_datos->inicio;
             for (int i = 0; i < resp; i++){
-                nodo = base_datos->inicio;
+                int total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + strlen(nodo->datos_conexion->port) + 1;
                 user_ip_port = (char *) malloc(sizeof(nodo->username) + sizeof(nodo->datos_conexion->ip) + sizeof(nodo->datos_conexion->port));
                 if(user_ip_port == NULL){
                     perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al reservar memoria");
                     close(socket_cliente_descriptor_local);
                 }
 
-                *user_ip_port = *nodo->username + " " + *nodo->datos_conexion.ip+ " "+ *nodo->datos_conexion.port + " ";
+                snprintf(user_ip_port, total_size, "%s %s %s", nodo->username, nodo->datos_conexion->ip, nodo->datos_conexion->port);
 
                 if(sendMessage(socket_cliente_descriptor_local, (char*) &user_ip_port, sizeof(user_ip_port)) == -1) {
                     perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
@@ -269,6 +273,11 @@ int main(int argc, char **argv) {
             perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Error al aceptar la conexion");
             return -1;
         }
+
+        // Info del cliente
+        inet_ntop(AF_INET, &(socket_cliente.sin_addr), ip_cliente, INET_ADDRSTRLEN);
+        puerto_cliente = ntohs(socket_cliente.sin_port);
+        printf("Conexión de cliente %s:%d\n", ip_cliente, puerto_cliente);
 
         // Recibir peticion
         printf("\nRecibiendo peticion del cliente.\n");

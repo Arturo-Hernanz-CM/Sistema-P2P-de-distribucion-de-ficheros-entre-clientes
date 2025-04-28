@@ -119,7 +119,7 @@ int unregister(char* username){
 }
 
 // Funcion para conectar un usuario
-int connect_user(char* username, char* port, char* ip){
+int connect_user(char* username, char* port, int ip){
     pthread_mutex_lock(&mutex_funcion);
     bloqueado = 1;
 
@@ -142,8 +142,8 @@ int connect_user(char* username, char* port, char* ip){
         return -1;
     }
 
-    char * ip = NULL;
-    ip = (char *) malloc(sizeof(char));
+    int * ip = NULL;
+    ip = (int *) malloc(sizeof(int));
     if (ip == NULL) {
         perror("ERROR:\nFile: claves.c\nFunction: connect\nError: Error al reservar memoria para guardar la IP");
         pthread_mutex_unlock(&mutex_funcion);
@@ -162,7 +162,7 @@ int connect_user(char* username, char* port, char* ip){
 
     // Guardar los datos
     if(conexion.exist.nodo_usuario->datos_conexion == NULL){
-        strcpy(datos_conexion->ip, ip);
+        memcpy(datos_conexion->ip, &ip, sizeof(int));
         strcpy(datos_conexion->port, port);
         memcpy(conexion.exist.nodo_usuario->datos_conexion, datos_conexion, sizeof(Datos_conexion));
     }
@@ -189,6 +189,8 @@ int disconnect(char* username){
     }
 
     // Eliminar los datos
+    free(conexion.exist.nodo_usuario->datos_conexion->ip);
+    free(conexion.exist.nodo_usuario->datos_conexion->port);
     free(conexion.exist.nodo_usuario->datos_conexion);
     conexion.exist.nodo_usuario->datos_conexion = NULL;
 
