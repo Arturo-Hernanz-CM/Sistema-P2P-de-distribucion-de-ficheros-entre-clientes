@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -13,8 +14,13 @@
 
 // Variable global
 Peticion peticion = {0};
+int hilo = 0;
 char *ip_servidor = NULL;
 char *puerto_servidor_char = NULL;
+
+// Inicializar hilo0
+pthread_t thread;
+pthread_attr_t thread_att;
 
 
 // Funciones
@@ -243,6 +249,20 @@ int comunicacion_servidor(Peticion * peticion) {
 
 // Funcion para registrar un nuevo usuario
 int register_user(char* username, char* ip_s, char* port_s) {
+    // Crear el hilo para escuchar peticiones de otros usuarios si no está creado
+    if(hilo == 0){
+        /*pthread_attr_init(&thread_att);
+        if(pthread_create(&thread, &thread_att, (void*) recibir_socket, &socket_cliente_descriptor) == 0) {
+            pthread_mutex_lock(&mutex_mensaje);
+            while(ocupado == 0) {
+                pthread_cond_wait(&condicion_mensaje, &mutex_mensaje);
+            }
+            ocupado = 0;
+            pthread_mutex_unlock(&mutex_mensaje);
+        }*/
+        hilo = 1;
+    }
+
     ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
     if(ip_servidor == NULL){
         perror("ERROR:\nFile: proxy.c\nFunction: register_user\nError: Error al reservar memoria para guardar la ip del servidor");
@@ -263,7 +283,7 @@ int register_user(char* username, char* ip_s, char* port_s) {
 
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
-        perror("USER DOES NOT EXIST\n");
+        perror("USERNAME IN USE\n");
         free(ip_servidor);
         free(puerto_servidor_char);
         return -1;
@@ -275,42 +295,21 @@ int register_user(char* username, char* ip_s, char* port_s) {
         return -1;
     }
     printf("REGISTER OK\n");
-    free(ip_servidor);
-    free(puerto_servidor_char);
     return 0;
 }
 
 // Funcion para dar de baja a un usuario
-int unregister(char* username, char* ip_s, char* port_s) {
-    ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
-    if(ip_servidor == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: unregister\nError: Error al reservar memoria para guardar la ip del servidor");
-        return -1;
-    }
-    strcpy(ip_servidor, ip_s);
-
-    puerto_servidor_char = malloc(sizeof(char) * (strlen(port_s) + 1));
-    if(puerto_servidor_char == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: unregister\nError: Error al reservar memoria para guardar el puerto del servidor");
-        free(ip_servidor);
-        return -1;
-    }
-    strcpy(puerto_servidor_char, port_s);
-
+int unregister(char* username) {
     strcpy(peticion.username, username);
     peticion.operacion = 1;
 
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
         perror("USER DOES NOT EXIST\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 2){
         perror("UNREGISTER FAIL\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
 
@@ -321,42 +320,21 @@ int unregister(char* username, char* ip_s, char* port_s) {
 }
 
 // Funcion para conectar al cliente al sistema
-int connect(char* username, char* ip_s, char* port_s) {
-    ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
-    if(ip_servidor == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: connect\nError: Error al reservar memoria para guardar la ip del servidor");
-        return -1;
-    }
-    strcpy(ip_servidor, ip_s);
-
-    puerto_servidor_char = malloc(sizeof(char) * (strlen(port_s) + 1));
-    if(puerto_servidor_char == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: connect\nError: Error al reservar memoria para guardar el puerto del servidor");
-        free(ip_servidor);
-        return -1;
-    }
-    strcpy(puerto_servidor_char, port_s);
-
+int connect(char* username) {
     strcpy(peticion.username, username);
     peticion.operacion = 2;
 
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
         perror("CONNECT FAIL, USER DOES NOT EXIST\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 2){
         perror("USER ALREADY CONNECTED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 3){
         perror("CONNECT FAIL\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
 
@@ -365,42 +343,21 @@ int connect(char* username, char* ip_s, char* port_s) {
 }
 
 // Funcion para desconectar al cliente del sistema
-int disconnect(char* username, char* ip_s, char* port_s) {
-    ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
-    if(ip_servidor == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: disconnect\nError: Error al reservar memoria para guardar la ip del servidor");
-        return -1;
-    }
-    strcpy(ip_servidor, ip_s);
-
-    puerto_servidor_char = malloc(sizeof(char) * (strlen(port_s) + 1));
-    if(puerto_servidor_char == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: disconnect\nError: Error al reservar memoria para guardar el puerto del servidor");
-        free(ip_servidor);
-        return -1;
-    }
-    strcpy(puerto_servidor_char, port_s);
-
+int disconnect(char* username) {
     strcpy(peticion.username, username);
     peticion.operacion = 3;
 
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
         perror("DISCONNECT FAIL, USER DOES NOT EXIST\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 2){
         perror("DISCONNECT FAIL, USER NOT CONNECTED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 3){
         perror("DISCONNECT FAIL\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
 
@@ -411,22 +368,7 @@ int disconnect(char* username, char* ip_s, char* port_s) {
 }
 
 // Funcion para publicar un fichero
-int publish(char * username_publisher, char* file_name, char* descripcion, char* ip_s, char* port_s) {
-    ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
-    if(ip_servidor == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: publish\nError: Error al reservar memoria para guardar la ip del servidor");
-        return -1;
-    }
-    strcpy(ip_servidor, ip_s);
-
-    puerto_servidor_char = malloc(sizeof(char) * (strlen(port_s) + 1));
-    if(puerto_servidor_char == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: publish\nError: Error al reservar memoria para guardar el puerto del servidor");
-        free(ip_servidor);
-        return -1;
-    }
-    strcpy(puerto_servidor_char, port_s);
-
+int publish(char * username_publisher, char* file_name, char* descripcion) {
     strcpy(peticion.username, username_publisher);
     strcpy(peticion.filename1, file_name);
     strcpy(peticion.description, descripcion);
@@ -435,52 +377,27 @@ int publish(char * username_publisher, char* file_name, char* descripcion, char*
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
         perror("PUBLISH FAIL, USER DOES NOT EXIST\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 2){
         perror("PUBLISH FAIL, USER NOT CONNECTED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 3){
         perror("PUBLISH FAIL, CONTENT ALREADY PUBLISHED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 4){
         perror("PUBLISH FAIL\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
 
     printf("PUBLISH OK\n");
-    free(ip_servidor);
-    free(puerto_servidor_char);
     return 0;
 }
 
 // Funcion para borrar un fichero
-int delete(char * username_solicitante, char * file_name, char* ip_s, char* port_s) {
-    ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
-    if(ip_servidor == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: delete\nError: Error al reservar memoria para guardar la ip del servidor");
-        return -1;
-    }
-    strcpy(ip_servidor, ip_s);
-
-    puerto_servidor_char = malloc(sizeof(char) * (strlen(port_s) + 1));
-    if(puerto_servidor_char == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: delete\nError: Error al reservar memoria para guardar el puerto del servidor");
-        free(ip_servidor);
-        return -1;
-    }
-    strcpy(puerto_servidor_char, port_s);
-
+int delete(char * username_solicitante, char * file_name) {
     strcpy(peticion.username, username_solicitante);
     strcpy(peticion.filename1, file_name);
     peticion.operacion = 5;
@@ -488,98 +405,50 @@ int delete(char * username_solicitante, char * file_name, char* ip_s, char* port
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
         perror("DELETE FAIL, USER DOES NOT EXIST\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 2){
         perror("DELETE FAIL, USER NOT CONNECTED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 3){
         perror("DELETE FAIL, CONTENT NOT PUBLISHED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 4){
         perror("DELETE FAIL\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
 
     printf("DELETE OK\n");
-    free(ip_servidor);
-    free(puerto_servidor_char);
     return 0;
 }
 
 // Funcion para obtener los usuarios
-int listusers(char * username, char* ip_s, char* port_s) {
-    ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
-    if(ip_servidor == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: listusers\nError: Error al reservar memoria para guardar la ip del servidor");
-        return -1;
-    }
-    strcpy(ip_servidor, ip_s);
-
-    puerto_servidor_char = malloc(sizeof(char) * (strlen(port_s) + 1));
-    if(puerto_servidor_char == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: listusers\nError: Error al reservar memoria para guardar el puerto del servidor");
-        free(puerto_servidor_char);
-        return -1;
-    }
-    strcpy(puerto_servidor_char, port_s);
-
+int listusers(char * username) {
     strcpy(peticion.username, username);
     peticion.operacion = 6;
 
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
         perror("LISTUSERS FAIL, USER DOES NOT EXIST\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 2){
         perror("LISTUSERS FAIL, USER NOT CONNECTED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 3){
         perror("LISTUSERS FAIL\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
 
     printf("LISTUSERS OK\n");
-    free(ip_servidor);
-    free(puerto_servidor_char);
     return 0;
 }
 
 // Funcion para obtener los ficheros
-int listcontent(char * username, char * username_solicitante, char* ip_s, char* port_s) {
-    ip_servidor = malloc(sizeof(char) * (strlen(ip_s) + 1));
-    if(ip_servidor == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: listcontent\nError: Error al reservar memoria para guardar la ip del servidor");
-        return -1;
-    }
-    strcpy(ip_servidor, ip_s);
-
-    puerto_servidor_char = malloc(sizeof(char) * (strlen(port_s) + 1));
-    if(puerto_servidor_char == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: listcontent\nError: Error al reservar memoria para guardar el puerto del servidor");
-        free(puerto_servidor_char);
-        return -1;
-    }
-    strcpy(puerto_servidor_char, port_s);
-
+int listcontent(char * username, char * username_solicitante) {
     strcpy(peticion.username, username);
     strcpy(peticion.username2, username_solicitante);
     peticion.operacion = 7;
@@ -587,32 +456,22 @@ int listcontent(char * username, char * username_solicitante, char* ip_s, char* 
     int resultado = comunicacion_servidor(&peticion);
     if(resultado == 1){
         perror("LISTCONTENT FAIL, USER DOES NOT EXIST\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 2){
         perror("LISTCONTENT FAIL, USER NOT CONNECTED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 3){
         perror("LISTCONTENT FAIL, REMOTE USER NOT CONNECTED\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado == 4){
         perror("LISTCONTENT FAIL\n");
-        free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
 
     printf("LISTCONTENT OK\n");
-    free(ip_servidor);
-    free(puerto_servidor_char);
     return 0;
 }
 
