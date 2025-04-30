@@ -156,14 +156,14 @@ void recibir_socket(int *socket_cliente_descriptor){
             }  
             nodo = base_datos->inicio;
             for (int i = 0; i < resp; i++){
-                int total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + strlen(nodo->datos_conexion->port) + 1;
+                int total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + sizeof(nodo->datos_conexion->port) + 1;
                 user_ip_port = (char *) malloc(sizeof(nodo->username) + sizeof(nodo->datos_conexion->ip) + sizeof(nodo->datos_conexion->port));
                 if(user_ip_port == NULL){
                     perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al reservar memoria");
                     close(socket_cliente_descriptor_local);
                 }
 
-                snprintf(user_ip_port, total_size, "%s %s %s", nodo->username, nodo->datos_conexion->ip, nodo->datos_conexion->port);
+                snprintf(user_ip_port, total_size, "%s %s %d", nodo->username, nodo->datos_conexion->ip, *nodo->datos_conexion->port);
 
                 if(sendMessage(socket_cliente_descriptor_local, (char*) &user_ip_port, sizeof(user_ip_port)) == -1) {
                     perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");

@@ -6,7 +6,7 @@
 // Datos de las conexiones
 typedef struct Datos_conexion{
     char * ip;
-    char * port;
+    int * port;
 }Datos_conexion;
 
 // Lista de publicaciones

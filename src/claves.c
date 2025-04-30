@@ -119,7 +119,7 @@ int unregister(char* username){
 }
 
 // Funcion para conectar un usuario
-int connect_user(char* username, char* port, int ip){
+int connect_user(char* username, int* port, char* ip){
     pthread_mutex_lock(&mutex_funcion);
     bloqueado = 1;
 
@@ -142,18 +142,18 @@ int connect_user(char* username, char* port, int ip){
         return -1;
     }
 
-    int * ip = NULL;
-    ip = (int *) malloc(sizeof(int));
-    if (ip == NULL) {
+    char * ip_ = NULL;
+    ip_ = (char *) malloc(sizeof(char));
+    if (ip_ == NULL) {
         perror("ERROR:\nFile: claves.c\nFunction: connect\nError: Error al reservar memoria para guardar la IP");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
     }
 
-    char * port = NULL;
-    port = (char *) malloc(sizeof(char));
-    if (port == NULL) {
+    int * port_ = NULL;
+    port_ = (int *) malloc(sizeof(int));
+    if (port_ == NULL) {
         perror("ERROR:\nFile: claves.c\nFunction: connect\nError: Error al reservar memoria para guardar el puerto");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
@@ -162,12 +162,15 @@ int connect_user(char* username, char* port, int ip){
 
     // Guardar los datos
     if(conexion.exist.nodo_usuario->datos_conexion == NULL){
-        memcpy(datos_conexion->ip, &ip, sizeof(int));
-        strcpy(datos_conexion->port, port);
+        memcpy(datos_conexion->port, &port_, sizeof(int));
+        strcpy(datos_conexion->ip, ip_);
         memcpy(conexion.exist.nodo_usuario->datos_conexion, datos_conexion, sizeof(Datos_conexion));
     }
 
-    pthread_mutes_unlock(&mutex_funcion);
+    free(ip_);
+    free(port_);
+    free(datos_conexion);
+    pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
     return 0;
 }
@@ -344,7 +347,7 @@ Exist is_registered(char * username){
     else{
         Nodo *nodo_actual = base_datos->inicio;
         for(int indice = 0; indice < base_datos->size; indice++){
-            if(strcmp(nodo_actual->username, *username == 0)){
+            if(strcmp(nodo_actual->username, username) == 0){
                 printf("Usuario encontrado.\n");
                 if (bloqueado == 0){
                     pthread_mutex_unlock(&mutex_funcion);
@@ -432,7 +435,7 @@ Published is_published(char * file_name, Lista_publicaciones * publicaciones){
     }
     Publicacion *publicacion_actual = publicaciones->inicio;
     for(int indice = 0; indice < publicaciones->size; indice++){
-        if(strcmp(publicacion_actual->filename, *file_name == 0)){
+        if(strcmp(publicacion_actual->filename, file_name) == 0){
             printf("Publicacion encontrada.\n");
             if (bloqueado == 0){
                 pthread_mutex_unlock(&mutex_funcion);
@@ -459,3 +462,4 @@ Published is_published(char * file_name, Lista_publicaciones * publicaciones){
     }
     publicacion.error = -1;
     return publicacion;
+}
