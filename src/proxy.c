@@ -18,10 +18,14 @@ int hilo = 0;
 char *ip_servidor = NULL;
 char *puerto_servidor_char = NULL;
 
-// Inicializar hilo0
-pthread_t thread;
-pthread_attr_t thread_att;
-
+// Hilo del cliente
+pthread_t thread_cliente;
+pthread_attr_t thread_att_cliente;
+pthread_mutex_t mutex_peticion;
+pthread_cond_t condicion_peticion;
+int ocupado = 0;
+struct sockaddr_in socket_cliente_escucha, socket_cliente;
+socklen_t size;
 
 // Funciones
 
@@ -77,7 +81,7 @@ int enviar_peticion(int socket_cliente_descriptor, Peticion * peticion){
 }
 
 // Recibir respuesta get value
-int recibir_get_value(int socket_cliente_descriptor, Peticion * resp){
+int recibir_cliente(int socket_cliente_descriptor, Peticion * resp){
     int32_t operacion_;
 
     // Recibir operacion
@@ -126,6 +130,123 @@ int recibir_get_value(int socket_cliente_descriptor, Peticion * resp){
     resp->operacion = ntohl(operacion_);
 
     return 0;
+}
+
+// Función del hilo del cliente
+int recibir_cliente(int* socket_cliente_descriptor){
+    // Variables
+    int socket_cliente_descriptor_local;
+    Conexion conexion;
+    Peticion peticion_local = {0};
+    int respuesta;
+    int32_t res;
+    int32_t resp;
+    char * user_ip_port = NULL;
+    Nodo * nodo = NULL;
+    FILE * descriptor_fichero;
+
+    // Copiar el descriptor del socket del cliente
+    pthread_mutex_lock(&mutex_peticion);
+    socket_cliente_descriptor_local = (*(int *) socket_cliente_descriptor);
+    ocupado = 1;
+    pthread_cond_signal(&condicion_peticion);
+    pthread_mutex_unlock(&mutex_peticion);
+
+    // Recibe los datos del cliente
+    if (recibir_cliente(socket_cliente_descriptor_local, &peticion_local) == -1){
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_socket\nError: Error al recibir la petición\n");
+        close(socket_cliente_descriptor_local);
+        respuesta = -1;
+    }
+
+    // Ejecutar la petición
+    if(peticion_local.operacion == 8){
+        descriptor_fichero = fopen(peticion_local.filename1, "r");
+        if(descriptor_fichero == NULL){
+            perror("ERROR:\nFile: proxy.c\nFunction: recibir_socket\nError: Error al abrir el fichero\n");
+            close(socket_cliente_descriptor_local);
+            respuesta = -1;
+        }
+    }
+    else{
+        respuesta = -1;
+    }
+
+    // Enviar la respuesta
+    printf("Enviando respuesta a cliente: %d\n", socket_cliente_descriptor_local);
+
+    res = htonl(respuesta);
+}
+
+// Crear el hilo del cliente
+int escuchar_socket_cliente(void){
+    int puerto_cliente;
+    char ip_cliente[INET_ADDRSTRLEN];
+
+    // Estructuras para los sockets
+    struct sockaddr_in socket_cliente_escucha, socket_cliente;
+    socklen_t size;
+
+    int socket_escucha_descriptor = socket(AF_INET, SOCK_STREAM, 0);
+    int socket_cliente_descriptor;
+
+    if (socket_escucha_descriptor == -1) {
+        perror("ERROR:\nFile: proxy.c\nFunction: escuchar_socket_cliente\nError: Error al crear el socket\n");
+        return -1;
+    }
+
+    int val = 1;
+	setsockopt(socket_escucha_descriptor, SOL_SOCKET, SO_REUSEADDR, (char *) &val, sizeof(int));
+
+	// Guardar la info del socket de escucha en la estructura
+	bzero((char *)&socket_cliente_escucha, sizeof(int));
+	socket_cliente_escucha.sin_family      = AF_INET;
+    socket_cliente_escucha.sin_addr.s_addr = INADDR_ANY;
+	socket_cliente_escucha.sin_port        = htons(0);  // Para que el sistema elija el puerto
+
+	// Asignar los datos del servidor al socket del servidor
+	int err = bind(socket_escucha_descriptor, (const struct sockaddr *)&socket_cliente_escucha, sizeof(socket_cliente_escucha));
+	if (err == -1) {
+        perror("ERROR:\nFile: proxy.c\nFunction: escuchar_socket_cliente\nError: Error al asignar los datos del cliente al socket de escucha");
+		return -1;
+	}
+
+    // Hilo
+    pthread_t thread_cliente_cliente;
+    pthread_attr_t thread_att_cliente_cliente;
+
+
+    // Inicializar mutex
+    pthread_attr_t thread_att_cliente_cliente;
+    pthread_attr_init(&thread_att_cliente_cliente);
+    pthread_mutex_init(&mutex_peticion, NULL);
+    pthread_cond_init(&condicion_peticion, NULL);
+
+    while(1) {
+        // Aceptar la conexion
+        socket_cliente_descriptor = accept(socket_escucha_descriptor, (struct sockaddr *)&socket_cliente, &size);
+        if (socket_cliente_descriptor < 0) {
+            perror("ERROR:\nFile: proxy.c\nFunction: escuchar_socket_cliente\nError: Error al aceptar la conexion");
+            return -1;
+        }
+
+        // Info del cliente
+        inet_ntop(AF_INET, &(socket_cliente.sin_addr), ip_cliente, INET_ADDRSTRLEN);
+        puerto_cliente = ntohs(socket_cliente.sin_port);
+        printf("Conexión de cliente %s:%d\n", ip_cliente, puerto_cliente);
+
+        // Recibir peticion
+        printf("\nRecibiendo peticion del cliente.\n");
+        if(pthread_create(&thread_cliente_cliente, &thread_att_cliente_cliente, (void*) recibir_cliente, &socket_cliente_descriptor) == 0) {
+            pthread_mutex_lock(&mutex_peticion);
+            while(ocupado == 0) {
+                pthread_cond_wait(&condicion_peticion, &mutex_peticion);
+            }
+            ocupado = 0;
+            pthread_mutex_unlock(&mutex_peticion);
+        }
+    }
+    
 }
 
 int comunicacion_servidor(Peticion * peticion) {
@@ -187,40 +308,6 @@ int comunicacion_servidor(Peticion * peticion) {
         return -1;
     }
 
-    // Recibir respuesta
-    /*if (peticion->operacion == 2){      // Funcion get_value
-        Peticion resp;
-        printf("Recibiendo respuesta del servidor.\n");
-        if (recibir_get_value(socket_cliente_descriptor, &resp) == -1){
-            perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al recibir la respuesta\n");
-            close(socket_cliente_descriptor);
-            return -1;
-        }
-        if (resp.N_value2 == -1){
-            perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error en la respuesta");
-            close(socket_cliente_descriptor);
-            return -1;
-        }
-        strcpy(peticion->value1, resp.value1);
-        peticion->N_value2 = resp.N_value2;
-        memcpy(&peticion->value2, &resp.value2, (peticion->N_value2)*sizeof(double));
-        peticion->value3 = resp.value3;
-    }
-    else{   // Cualquier otra funcion
-        printf("Recibiendo respuesta del servidor.\n");
-        if(recvMessage(socket_cliente_descriptor, (char *) &res, sizeof(int32_t)) == -1) {
-            perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: No se puede recibir la respuesta");
-            close(socket_cliente_descriptor);
-            return -1;
-        }
-        respuesta = ntohl(res);
-        if (respuesta == -1){
-            perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error en la respuesta");
-            close(socket_cliente_descriptor);
-            return -1;
-        }
-    }*/
-
     if(peticion->operacion == 6 || peticion->operacion == 7){
         char respuesta;
         int fin_emit;
@@ -265,15 +352,13 @@ int comunicacion_servidor(Peticion * peticion) {
 int register_user(char* username, char* ip_s, char* port_s) {
     // Crear el hilo para escuchar peticiones de otros usuarios si no está creado
     if(hilo == 0){
-        /*pthread_attr_init(&thread_att);
-        if(pthread_create(&thread, &thread_att, (void*) recibir_socket, &socket_cliente_descriptor) == 0) {
-            pthread_mutex_lock(&mutex_mensaje);
-            while(ocupado == 0) {
-                pthread_cond_wait(&condicion_mensaje, &mutex_mensaje);
-            }
-            ocupado = 0;
-            pthread_mutex_unlock(&mutex_mensaje);
-        }*/
+        // Inicializar hilos
+        pthread_attr_init(&thread_att_cliente);
+
+        if(pthread_create(&thread_cliente,&thread_att_cliente, (void*) escuchar_socket_cliente, NULL) != 0){
+            perror("ERROR:\nFile: proxy.c\nFunction: register_user\nError: Error al crear el hilo");
+            return -1;
+        }
         hilo = 1;
     }
 
@@ -325,6 +410,10 @@ int unregister(char* username) {
     else if(resultado == 2){
         perror("UNREGISTER FAIL\n");
         return -1;
+    }
+    if(hilo == 1){
+        // Hay que cerrar el hilo
+        hilo = 0;
     }
 
     printf("UNREGISTER OK\n");

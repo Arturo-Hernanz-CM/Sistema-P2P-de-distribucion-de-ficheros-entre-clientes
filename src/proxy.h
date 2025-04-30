@@ -17,4 +17,7 @@ int get_file(char * username, char * remote_filename, char * local_filename, cha
 int comunicacion_servidor(Peticion * peticion);
 int enviar_peticion(int socket_cliente, Peticion * peticion);
 
+int recibir_cliente(int * socket_cliente_descriptor);
+int escuchar_socket_cliente(void);
+
 #endif
