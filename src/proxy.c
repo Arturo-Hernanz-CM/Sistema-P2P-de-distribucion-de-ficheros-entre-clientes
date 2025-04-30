@@ -136,13 +136,10 @@ int recibir_peticion(int socket_cliente_descriptor, Peticion * resp){
 void recibir_cliente(int* socket_cliente_descriptor){
     // Variables
     int socket_cliente_descriptor_local;
-    Conexion conexion;
     Peticion peticion_local = {0};
     int respuesta;
     int32_t res;
     int32_t resp;
-    char * user_ip_port = NULL;
-    Nodo * nodo = NULL;
     FILE * descriptor_fichero;
 
     // Copiar el descriptor del socket del cliente
@@ -165,35 +162,33 @@ void recibir_cliente(int* socket_cliente_descriptor){
         if(descriptor_fichero == NULL){
             perror("ERROR:\nFile: proxy.c\nFunction: recibir_socket\nError: Error al abrir el fichero\n");
             close(socket_cliente_descriptor_local);
-            respuesta = 1;
+            respuesta = -10;
         }
     }
     else{
         perror("ERROR:\nFile: proxy.c\nFunction: recibir_socket\nError: Peticion no soportada\n");
         close(socket_cliente_descriptor_local);
-        respuesta = 2;
+        respuesta = -1;
     }
 
     // Enviar la respuesta
     printf("Enviando respuesta a cliente: %d\n", socket_cliente_descriptor_local);
 
     res = htonl(respuesta);
-    if(respuesta == 1 || respuesta == 2){
+    if(respuesta <= 0){
         if(sendMessage(socket_cliente_descriptor_local, (char *) &res, sizeof(res)) == -1){
             perror("ERROR:\nFile: proxy.c\nFunction: recibir_socket\nError: Error al enviar la respuesta\n");
             close(socket_cliente_descriptor_local);
         }
     }
-    else{
+    if(respuesta >= 0){
         // Calcular el tamaño del fichero
         fseek(descriptor_fichero, 0L, SEEK_END); 
         long int res = ftell(descriptor_fichero); 
-
         if(sendMessage(socket_cliente_descriptor_local, (char *) &res, sizeof(res)) == -1){
             perror("ERROR:\nFile: proxy.c\nFunction: recibir_socket\nError: Error al enviar la respuesta\n");
             close(socket_cliente_descriptor_local);
         }
-
         // Enviar el contenido del fichero
         rewind(descriptor_fichero);
         while(fread(&resp, sizeof(int), 1, descriptor_fichero) != 0){
@@ -210,15 +205,15 @@ void recibir_cliente(int* socket_cliente_descriptor){
 int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
     // Variables
     int respuesta;
-    int socket_cliente_descriptor;
+    int socket_cliente_origen;
 	struct sockaddr_in socket_cliente_destino;	// socket del servidor
 	struct hostent *datos_cliente_destino;	// datos del cliente_destino
-	int32_t res;
 	int error;
+    FILE *fichero_local;
     
     // Socket del cliente
-	socket_cliente_descriptor = socket(AF_INET, SOCK_STREAM, 0);
-	if (socket_cliente_descriptor == -1) {
+	socket_cliente_origen = socket(AF_INET, SOCK_STREAM, 0);
+	if (socket_cliente_origen == -1) {
 		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al crear el socket del cliente\n");
         return -1;
 	}
@@ -228,68 +223,63 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
    	datos_cliente_destino = gethostbyname(ip_dest);
 	if (datos_cliente_destino == NULL) {
 		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al obtener la informacion del cliente_destino\n");
-		close(socket_cliente_descriptor);
+		close(socket_cliente_origen);
         return -1;
 	}
 
     // Guardar los datos del cliente_destino en la estructura para usarlos en el socket
     memcpy (&(socket_cliente_destino.sin_addr), datos_cliente_destino->h_addr_list[0], datos_cliente_destino->h_length);
     socket_cliente_destino.sin_family  = AF_INET;
-    socket_cliente_destino.sin_port    = htons(puerto_cliente_destino);
+    socket_cliente_destino.sin_port    = htons(port_dest);
     
     // Conectar el socket del cliente con el cliente_destino
-    error = connect(socket_cliente_descriptor, (struct sockaddr *) &socket_cliente_destino,  sizeof(socket_cliente_destino));
+    error = connect(socket_cliente_origen, (struct sockaddr *) &socket_cliente_destino,  sizeof(socket_cliente_destino));
 	if (error == -1) {
 		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al conectar el socket del cliente con el cliente_destino\n");
-		close(socket_cliente_descriptor);
+		close(socket_cliente_origen);
         return -1;
 	}
 
     // Enviar datos al cliente_destino
     printf("\nEnviando peticion.\n");
-    if (enviar_peticion(socket_cliente_descriptor, peticion) == -1){
+    if (enviar_peticion(socket_cliente_origen, peticion) == -1){
         perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al enviar la peticion\n");
-        close(socket_cliente_descriptor);
+        close(socket_cliente_origen);
         return -1;
     }
 
-    if(peticion->operacion == 6 || peticion->operacion == 7){
-        char respuesta;
-        int fin_emit;
-        int32_t fin_emit_;
-        if(recvMessage(socket_cliente_descriptor, (char *) &fin_emit_, sizeof(fin_emit_)) == -1) {
-            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: No se puede recibir la respuesta");
-            close(socket_cliente_descriptor);
-            return -1;
-        }
-        fin_emit = ntohl(fin_emit_);
-        for(int i = 0; i < fin_emit; i++){
-            if(recvMessage(socket_cliente_descriptor, (char *) &respuesta, sizeof(respuesta)) == -1) {
-                perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: No se puede recibir la respuesta");
-                close(socket_cliente_descriptor);
-                return -1;
-            }
-            printf("%c\n", respuesta);
-        }
-        
-    }
-    else{
-        printf("Recibiendo respuesta del cliente_destino.\n");
-        if(recvMessage(socket_cliente_descriptor, (char *) &res, sizeof(int32_t)) == -1) {
-            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: No se puede recibir la respuesta");
-            close(socket_cliente_descriptor);
-            return -1;
-        }
-        respuesta = ntohl(res);
-        if (respuesta == -1){
-            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: Error en la respuesta");
-            close(socket_cliente_descriptor);
-            return -1;
-        }
+    int fin_emit;
+    int32_t fin_emit_;
+    if(recvMessage(socket_cliente_origen, (char *) &fin_emit_, sizeof(fin_emit_)) == -1) {
+        perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: No se puede recibir la respuesta");
+        close(socket_cliente_origen);
+        return -1;
     }
 
+    fin_emit = ntohl(fin_emit_);
+    if(fin_emit < 0){
+        return fin_emit;
+    }
+
+    fichero_local = fopen(peticion->filename2, "w");
+    if(fichero_local == NULL){
+        perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: Error al abrir el fichero local\n");
+        close(socket_cliente_origen);
+        return -1;
+    }
+
+    for(int i = 0; i < fin_emit; i++){
+        if(recvMessage(socket_cliente_origen, (char *) &respuesta, sizeof(respuesta)) == -1) {
+            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: No se puede recibir la respuesta");
+            close(socket_cliente_origen);
+            return -1;
+        }
+        fwrite(&respuesta, sizeof(int), 1, fichero_local);
+    }
+    fclose(fichero_local);
+
     // Cerrar socket
-    close(socket_cliente_descriptor);
+    close(socket_cliente_origen);
     return 0;
 }
 
@@ -332,7 +322,6 @@ int escuchar_socket_cliente(void){
 
 
     // Inicializar mutex
-    pthread_attr_t thread_att_cliente_cliente;
     pthread_attr_init(&thread_att_cliente_cliente);
     pthread_mutex_init(&mutex_peticion, NULL);
     pthread_cond_init(&condicion_peticion, NULL);
@@ -424,7 +413,7 @@ int comunicacion_servidor(Peticion * peticion) {
     }
 
     if(peticion->operacion == 6 || peticion->operacion == 7){
-        char respuesta;
+        char respuest;
         int fin_emit;
         int32_t fin_emit_;
         if(recvMessage(socket_cliente_descriptor, (char *) &fin_emit_, sizeof(fin_emit_)) == -1) {
@@ -434,12 +423,12 @@ int comunicacion_servidor(Peticion * peticion) {
         }
         fin_emit = ntohl(fin_emit_);
         for(int i = 0; i < fin_emit; i++){
-            if(recvMessage(socket_cliente_descriptor, (char *) &respuesta, sizeof(respuesta)) == -1) {
+            if(recvMessage(socket_cliente_descriptor, (char *) &respuest, sizeof(respuest)) == -1) {
                 perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
                 close(socket_cliente_descriptor);
                 return -1;
             }
-            printf("%c\n", respuesta);
+            printf("%c\n", respuest);
         }
         
     }
@@ -700,12 +689,13 @@ int get_file(char * username, char * remote_filename, char * local_filename, cha
     strcpy(peticion.filename2, local_filename);
     peticion.operacion = 8;
 
-    int resultado = comunicacion_cliente(&peticion);
-    if(resultado == 1){
+    int resultado = comunicacion_cliente(&peticion, ip_dest, port_dest);
+
+    if(resultado == -10){
         perror("GETFILE FAIL, FILE DOES NOT EXIST\n");
         return -1;
     }
-    else if(resultado == 2){
+    else if(resultado == -1){
         perror("GETFILE FAIL\n");
         return -1;
     }
