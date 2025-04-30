@@ -2,7 +2,16 @@
 CC = gcc
 
 # Flags de compilación
-CFLAGS = -Wall -g -fPIC -pthread -lrt
+CFLAGS = -Wall -g -fPIC -pthread
+
+# Detección del sistema
+UNAME_S := $(shell uname -s)
+
+# Flags de compilación
+CFLAGS = -Wall -g -fPIC -pthread
+ifeq ($(UNAME_S), Linux)
+    CFLAGS += -lrt
+endif
 
 # Archivos fuente
 SRCS_SERVER = servidor.c claves.c lines.c

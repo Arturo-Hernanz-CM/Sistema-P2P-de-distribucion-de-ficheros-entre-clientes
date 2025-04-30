@@ -6,7 +6,7 @@
 
 int register_user(char* username, char* ip_s, char* port_s);
 int unregister(char* username);
-int connect(char* username);
+int connect_user(char* username);
 int disconnect(char* username);
 int publish(char * username_publisher, char* file_name, char* descripcion);
 int delete(char * username_solicitante, char * file_name);

@@ -88,7 +88,6 @@ void recibir_socket(int *socket_cliente_descriptor){
     int32_t res;
     int32_t resp;
     char * user_ip_port = NULL;
-    char * filename = NULL;
     Nodo * nodo = NULL;
 
     // Copiar el descriptor del socket del cliente

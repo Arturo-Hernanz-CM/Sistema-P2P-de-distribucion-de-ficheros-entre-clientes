@@ -334,7 +334,7 @@ int unregister(char* username) {
 }
 
 // Funcion para conectar al cliente al sistema
-int connect(char* username) {
+int connect_user(char* username) {
     strcpy(peticion.username, username);
     peticion.operacion = 2;
 
