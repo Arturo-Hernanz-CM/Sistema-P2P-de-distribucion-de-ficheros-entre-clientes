@@ -80,7 +80,7 @@ int enviar_peticion(int socket_cliente_descriptor, Peticion * peticion){
     return 0;
 }
 
-// Recibir respuesta get value
+// Recibir peticion
 int recibir_peticion(int socket_cliente_descriptor, Peticion * resp){
     int32_t operacion_;
 
@@ -132,6 +132,7 @@ int recibir_peticion(int socket_cliente_descriptor, Peticion * resp){
     return 0;
 }
 
+// Comunicacion peer-to-peer
 // Función del hilo del cliente
 void recibir_cliente(int* socket_cliente_descriptor){
     // Variables
@@ -353,6 +354,8 @@ int escuchar_socket_cliente(void){
     
 }
 
+// Comunicacion con el servidor
+// Funcion para comunicarse con el servidor
 int comunicacion_servidor(Peticion * peticion) {
     // Variables
     int puerto_servidor;
@@ -452,6 +455,7 @@ int comunicacion_servidor(Peticion * peticion) {
     return 0;
 }
 
+// Funciones principales
 // Funcion para registrar un nuevo usuario
 int register_user(char* username, char* ip_s, char* port_s) {
     // Crear el hilo para escuchar peticiones de otros usuarios si no está creado
