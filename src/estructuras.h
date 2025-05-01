@@ -6,7 +6,7 @@
 // Datos de las conexiones
 typedef struct Datos_conexion{
     char * ip;
-    int * port;
+    int port;
 }Datos_conexion;
 
 // Lista de publicaciones
@@ -67,6 +67,7 @@ typedef struct{
     char description[256];
     char filename2[256];
     int operacion;
+    int port_escucha;
     /*
         0 -> register
         1 -> unregister

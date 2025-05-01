@@ -26,18 +26,27 @@ pthread_cond_t condicion_peticion;
 int ocupado = 0;
 struct sockaddr_in socket_cliente_escucha, socket_cliente;
 socklen_t size;
+int puerto_escucha;
 
 // Funciones
 
 // Enviar peticion
 int enviar_peticion(int socket_cliente_descriptor, Peticion * peticion){
-   int32_t operacion_;
+   int32_t operacion_, port_;
 
    operacion_ = htonl(peticion->operacion);
+   port_ = htonl(peticion->port_escucha);
 
    // Enviar operacion
     if (sendMessage(socket_cliente_descriptor, (char *) &operacion_, sizeof(operacion_)) == -1) {
         perror("ERROR:\nFile: proxy.c\nFunction: enviar_peticion\nError: Error al enviar la operacion\n");
+        close(socket_cliente_descriptor);
+        return -1;
+    }
+
+    // Enviar puerto
+    if (sendMessage(socket_cliente_descriptor, (char *) &port_, sizeof(port_)) == -1) {
+        perror("ERROR:\nFile: proxy.c\nFunction: enviar_peticion\nError: Error al enviar el puerto\n");
         close(socket_cliente_descriptor);
         return -1;
     }
@@ -82,46 +91,53 @@ int enviar_peticion(int socket_cliente_descriptor, Peticion * peticion){
 
 // Recibir peticion
 int recibir_peticion(int socket_cliente_descriptor, Peticion * resp){
-    int32_t operacion_;
+    int32_t operacion_, port_;
 
     // Recibir operacion
     if(recvMessage(socket_cliente_descriptor, (char *) &operacion_, sizeof(operacion_)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la operacion\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir la operacion\n");
+        close(socket_cliente_descriptor);
+        return -1;
+    }
+
+    // Recibir puerto
+    if(recvMessage(socket_cliente_descriptor, (char *) &port_, sizeof(port_)) == -1){
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir el puerto\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir username
     if(recvMessage(socket_cliente_descriptor, resp->username, sizeof(resp->username)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir username\n");
         close(socket_cliente_descriptor);
         return -1;
     }
     
     // Recibir username2
     if(recvMessage(socket_cliente_descriptor, resp->username2, sizeof(resp->username2)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username2\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir username2\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir filename1
     if(recvMessage(socket_cliente_descriptor, resp->filename1, sizeof(resp->filename1)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename1\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir filename1\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir descripcion    
     if(recvMessage(socket_cliente_descriptor, resp->description, sizeof(resp->description)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la descripcion\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir la descripcion\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir filename2
     if(recvMessage(socket_cliente_descriptor, resp->filename2, sizeof(resp->filename2)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename2\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir filename2\n");
         close(socket_cliente_descriptor);
         return -1;
     }    
@@ -215,7 +231,7 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
     // Socket del cliente
 	socket_cliente_origen = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_cliente_origen == -1) {
-		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al crear el socket del cliente\n");
+		perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente\nError: Error al crear el socket del cliente\n");
         return -1;
 	}
 
@@ -223,7 +239,7 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
 	bzero((char *)&socket_cliente_destino, sizeof(socket_cliente_destino));
    	datos_cliente_destino = gethostbyname(ip_dest);
 	if (datos_cliente_destino == NULL) {
-		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al obtener la informacion del cliente_destino\n");
+		perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente\nError: Error al obtener la informacion del cliente_destino\n");
 		close(socket_cliente_origen);
         return -1;
 	}
@@ -236,7 +252,7 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
     // Conectar el socket del cliente con el cliente_destino
     error = connect(socket_cliente_origen, (struct sockaddr *) &socket_cliente_destino,  sizeof(socket_cliente_destino));
 	if (error == -1) {
-		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al conectar el socket del cliente con el cliente_destino\n");
+		perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente\nError: Error al conectar el socket del cliente con el cliente_destino\n");
 		close(socket_cliente_origen);
         return -1;
 	}
@@ -244,7 +260,7 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
     // Enviar datos al cliente_destino
     printf("\nEnviando peticion.\n");
     if (enviar_peticion(socket_cliente_origen, peticion) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al enviar la peticion\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente\nError: Error al enviar la peticion\n");
         close(socket_cliente_origen);
         return -1;
     }
@@ -252,7 +268,7 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
     int fin_emit;
     int32_t fin_emit_;
     if(recvMessage(socket_cliente_origen, (char *) &fin_emit_, sizeof(fin_emit_)) == -1) {
-        perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: No se puede recibir la respuesta");
+        perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente\nError: No se puede recibir la respuesta");
         close(socket_cliente_origen);
         return -1;
     }
@@ -264,14 +280,14 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
 
     fichero_local = fopen(peticion->filename2, "w");
     if(fichero_local == NULL){
-        perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: Error al abrir el fichero local\n");
+        perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente\nError: Error al abrir el fichero local\n");
         close(socket_cliente_origen);
         return -1;
     }
 
     for(int i = 0; i < fin_emit; i++){
         if(recvMessage(socket_cliente_origen, (char *) &respuesta, sizeof(respuesta)) == -1) {
-            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente_destino\nError: No se puede recibir la respuesta");
+            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_cliente\nError: No se puede recibir la respuesta");
             close(socket_cliente_origen);
             return -1;
         }
@@ -285,37 +301,53 @@ int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest){
 }
 
 // Crear el hilo del cliente
-int escuchar_socket_cliente(void){
+void* escuchar_socket_cliente(void * arg){
     int puerto_cliente;
     char ip_cliente[INET_ADDRSTRLEN];
 
     // Estructuras para los sockets
-    struct sockaddr_in socket_cliente_escucha, socket_cliente;
+    struct sockaddr_in socket_cliente_escucha, socket_cliente_;
     socklen_t size;
+    socklen_t len = sizeof(socket_cliente_escucha);
 
     int socket_escucha_descriptor = socket(AF_INET, SOCK_STREAM, 0);
-    int socket_cliente_descriptor;
+    int socket_cliente_descriptor_;
 
     if (socket_escucha_descriptor == -1) {
         perror("ERROR:\nFile: proxy.c\nFunction: escuchar_socket_cliente\nError: Error al crear el socket\n");
-        return -1;
+        close(socket_escucha_descriptor);
     }
 
     int val = 1;
 	setsockopt(socket_escucha_descriptor, SOL_SOCKET, SO_REUSEADDR, (char *) &val, sizeof(int));
 
 	// Guardar la info del socket de escucha en la estructura
-	bzero((char *)&socket_cliente_escucha, sizeof(int));
+	bzero((char *)&socket_cliente_escucha, sizeof(socket_cliente_escucha));
 	socket_cliente_escucha.sin_family      = AF_INET;
     socket_cliente_escucha.sin_addr.s_addr = INADDR_ANY;
-	socket_cliente_escucha.sin_port        = htons(0);  // Para que el sistema elija el puerto
+	socket_cliente_escucha.sin_port        = htons(0);
 
 	// Asignar los datos del servidor al socket del servidor
 	int err = bind(socket_escucha_descriptor, (const struct sockaddr *)&socket_cliente_escucha, sizeof(socket_cliente_escucha));
 	if (err == -1) {
         perror("ERROR:\nFile: proxy.c\nFunction: escuchar_socket_cliente\nError: Error al asignar los datos del cliente al socket de escucha");
-		return -1;
+        close(socket_escucha_descriptor);
 	}
+
+    // Escuchar el socket
+    err = listen(socket_escucha_descriptor, 5);
+    if (err == -1) {
+        perror("ERROR:\nFile: proxy.c\nFunction: escuchar_socket_cliente\nError: Error al escuchar el socket");
+        close(socket_escucha_descriptor);
+    }
+
+    // Obtener el puerto dinamicamente
+    if (getsockname(socket_escucha_descriptor, (struct sockaddr *)&socket_cliente_escucha, &len) == -1) {
+        perror("getsockname");
+    } else {
+        puerto_escucha = ntohs(socket_cliente_escucha.sin_port);
+        printf("Puerto de escucha P2P: %d\n", puerto_escucha);
+    }
 
     // Hilo
     pthread_t thread_cliente_cliente;
@@ -327,22 +359,24 @@ int escuchar_socket_cliente(void){
     pthread_mutex_init(&mutex_peticion, NULL);
     pthread_cond_init(&condicion_peticion, NULL);
 
+    pthread_attr_setdetachstate(&thread_att_cliente_cliente, PTHREAD_CREATE_DETACHED);      // threads independientes
     while(1) {
         // Aceptar la conexion
-        socket_cliente_descriptor = accept(socket_escucha_descriptor, (struct sockaddr *)&socket_cliente, &size);
-        if (socket_cliente_descriptor < 0) {
+        size = sizeof(socket_cliente_);
+        socket_cliente_descriptor_ = accept(socket_escucha_descriptor, (struct sockaddr *)&socket_cliente_, &size);
+        if (socket_cliente_descriptor_ < 0) {
             perror("ERROR:\nFile: proxy.c\nFunction: escuchar_socket_cliente\nError: Error al aceptar la conexion");
-            return -1;
+            close(socket_escucha_descriptor);
         }
 
         // Info del cliente
-        inet_ntop(AF_INET, &(socket_cliente.sin_addr), ip_cliente, INET_ADDRSTRLEN);
-        puerto_cliente = ntohs(socket_cliente.sin_port);
+        inet_ntop(AF_INET, &(socket_cliente_.sin_addr), ip_cliente, INET_ADDRSTRLEN);
+        puerto_cliente = ntohs(socket_cliente_.sin_port);
         printf("Conexión de cliente %s:%d\n", ip_cliente, puerto_cliente);
 
         // Recibir peticion
         printf("\nRecibiendo peticion del cliente.\n");
-        if(pthread_create(&thread_cliente_cliente, &thread_att_cliente_cliente, (void*) recibir_cliente, &socket_cliente_descriptor) == 0) {
+        if(pthread_create(&thread_cliente_cliente, &thread_att_cliente_cliente, (void*) recibir_cliente, &socket_cliente_descriptor_) == 0) {
             pthread_mutex_lock(&mutex_peticion);
             while(ocupado == 0) {
                 pthread_cond_wait(&condicion_peticion, &mutex_peticion);
@@ -351,6 +385,7 @@ int escuchar_socket_cliente(void){
             pthread_mutex_unlock(&mutex_peticion);
         }
     }
+    close(socket_escucha_descriptor);
     
 }
 
@@ -359,16 +394,28 @@ int escuchar_socket_cliente(void){
 int comunicacion_servidor(Peticion * peticion) {
     // Variables
     int puerto_servidor;
+    int error = 0;
+    if(peticion->operacion == 1 || peticion->operacion == 2){
+        error = -2;
+    }
+    else if(peticion->operacion == 3 || peticion->operacion == 4 || peticion->operacion == 7){
+        error = -3;
+    }
+    else if(peticion->operacion == 5 || peticion->operacion == 6 || peticion->operacion == 8){
+        error = -4;
+    }
+    else if(peticion->operacion == 9){
+        error = -1;
+    }
     
     // Comprobacion de las variables
     puerto_servidor = atoi(puerto_servidor_char);
     if(puerto_servidor == 0){
         if (strcmp(puerto_servidor_char, "0") != 0) {
             perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al obtener el puerto del servidor\n");
-            return -1;
+            return error;
         }
     }
-
 
     // Variables
     int respuesta;
@@ -376,13 +423,13 @@ int comunicacion_servidor(Peticion * peticion) {
 	struct sockaddr_in socket_servidor;	// socket del servidor
 	struct hostent *datos_servidor;	// datos del servidor
 	int32_t res;
-	int error;
+	int error_;
     
     // Socket del cliente
 	socket_cliente_descriptor = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_cliente_descriptor == -1) {
 		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al crear el socket del cliente\n");
-        return -1;
+        return error;
 	}
 
     // Socket del servidor
@@ -391,7 +438,7 @@ int comunicacion_servidor(Peticion * peticion) {
 	if (datos_servidor == NULL) {
 		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al obtener la informacion del servidor\n");
 		close(socket_cliente_descriptor);
-        return -1;
+        return error;
 	}
 
     // Guardar los datos del servidor en la estructura para usarlos en el socket
@@ -400,11 +447,11 @@ int comunicacion_servidor(Peticion * peticion) {
     socket_servidor.sin_port    = htons(puerto_servidor);
     
     // Conectar el socket del cliente con el servidor
-    error = connect(socket_cliente_descriptor, (struct sockaddr *) &socket_servidor,  sizeof(socket_servidor));
-	if (error == -1) {
+    error_ = connect(socket_cliente_descriptor, (struct sockaddr *) &socket_servidor,  sizeof(socket_servidor));
+	if (error_ == -1) {
 		perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al conectar el socket del cliente con el servidor\n");
 		close(socket_cliente_descriptor);
-        return -1;
+        return error;
 	}
 
     // Enviar datos al servidor
@@ -412,27 +459,47 @@ int comunicacion_servidor(Peticion * peticion) {
     if (enviar_peticion(socket_cliente_descriptor, peticion) == -1){
         perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al enviar la peticion\n");
         close(socket_cliente_descriptor);
-        return -1;
+        return error;
     }
 
     if(peticion->operacion == 6 || peticion->operacion == 7){
-        char respuest;
         int fin_emit;
-        int32_t fin_emit_;
+        int32_t fin_emit_, tot_size;
         if(recvMessage(socket_cliente_descriptor, (char *) &fin_emit_, sizeof(fin_emit_)) == -1) {
             perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
             close(socket_cliente_descriptor);
-            return -1;
+            return error;
         }
         fin_emit = ntohl(fin_emit_);
+
+        char* buffer = NULL;
+
         for(int i = 0; i < fin_emit; i++){
-            if(recvMessage(socket_cliente_descriptor, (char *) &respuest, sizeof(respuest)) == -1) {
+            printf("Recibiendo respuesta del servidor.\n");
+
+            if(recvMessage(socket_cliente_descriptor, (char *) &tot_size, sizeof(int32_t)) == -1) {
                 perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
                 close(socket_cliente_descriptor);
-                return -1;
+                return error;
             }
-            printf("%c\n", respuest);
+            tot_size = ntohl(tot_size);
+
+            buffer = (char*)malloc( sizeof(char)*tot_size);
+            if(buffer == NULL){
+                perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
+                close(socket_cliente_descriptor);
+                return error;
+            }
+
+            if(recvMessage(socket_cliente_descriptor, buffer, tot_size) == -1) {
+                perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
+                close(socket_cliente_descriptor);
+                return error;
+            }
+            printf("%s\n", buffer);
+            free(buffer);
         }
+        close(socket_cliente_descriptor);
         
     }
     else{
@@ -440,13 +507,13 @@ int comunicacion_servidor(Peticion * peticion) {
         if(recvMessage(socket_cliente_descriptor, (char *) &res, sizeof(int32_t)) == -1) {
             perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
             close(socket_cliente_descriptor);
-            return -1;
+            return error;
         }
         respuesta = ntohl(res);
         if (respuesta == -1){
             perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: Error en la respuesta");
             close(socket_cliente_descriptor);
-            return -1;
+            return error;
         }
     }
 
@@ -463,7 +530,7 @@ int register_user(char* username, char* ip_s, char* port_s) {
         // Inicializar hilos
         pthread_attr_init(&thread_att_cliente);
 
-        if(pthread_create(&thread_cliente,&thread_att_cliente, (void*) escuchar_socket_cliente, NULL) != 0){
+        if(pthread_create(&thread_cliente,&thread_att_cliente, escuchar_socket_cliente, NULL) != 0){
             perror("ERROR:\nFile: proxy.c\nFunction: register_user\nError: Error al crear el hilo");
             return -1;
         }
@@ -489,13 +556,13 @@ int register_user(char* username, char* ip_s, char* port_s) {
     peticion.operacion = 0;
 
     int resultado = comunicacion_servidor(&peticion);
-    if(resultado == 1){
+    if(resultado == -1){
         perror("USERNAME IN USE\n");
         free(ip_servidor);
         free(puerto_servidor_char);
         return -1;
     }
-    else if(resultado == 2){
+    else if(resultado == -2){
         perror("REGISTER FAIL\n");
         free(ip_servidor);
         free(puerto_servidor_char);
@@ -511,11 +578,11 @@ int unregister(char* username) {
     peticion.operacion = 1;
 
     int resultado = comunicacion_servidor(&peticion);
-    if(resultado == 1){
+    if(resultado == -1){
         perror("USER DOES NOT EXIST\n");
         return -1;
     }
-    else if(resultado == 2){
+    else if(resultado == -2){
         perror("UNREGISTER FAIL\n");
         return -1;
     }
@@ -525,8 +592,6 @@ int unregister(char* username) {
     }
 
     printf("UNREGISTER OK\n");
-    free(ip_servidor);
-    free(puerto_servidor_char);
     return 0;
 }
 
@@ -534,17 +599,18 @@ int unregister(char* username) {
 int connect_user(char* username) {
     strcpy(peticion.username, username);
     peticion.operacion = 2;
+    peticion.port_escucha = puerto_escucha;
 
     int resultado = comunicacion_servidor(&peticion);
-    if(resultado == 1){
+    if(resultado == -1){
         perror("CONNECT FAIL, USER DOES NOT EXIST\n");
         return -1;
     }
-    else if(resultado == 2){
+    else if(resultado == -2){
         perror("USER ALREADY CONNECTED\n");
         return -1;
     }
-    else if(resultado == 3){
+    else if(resultado == -3){
         perror("CONNECT FAIL\n");
         return -1;
     }
@@ -559,15 +625,15 @@ int disconnect(char* username) {
     peticion.operacion = 3;
 
     int resultado = comunicacion_servidor(&peticion);
-    if(resultado == 1){
+    if(resultado == -1){
         perror("DISCONNECT FAIL, USER DOES NOT EXIST\n");
         return -1;
     }
-    else if(resultado == 2){
+    else if(resultado == -2){
         perror("DISCONNECT FAIL, USER NOT CONNECTED\n");
         return -1;
     }
-    else if(resultado == 3){
+    else if(resultado == -3){
         perror("DISCONNECT FAIL\n");
         return -1;
     }
@@ -586,19 +652,19 @@ int publish(char * username_publisher, char* file_name, char* descripcion) {
     peticion.operacion = 4;
 
     int resultado = comunicacion_servidor(&peticion);
-    if(resultado == 1){
+    if(resultado == -1){
         perror("PUBLISH FAIL, USER DOES NOT EXIST\n");
         return -1;
     }
-    else if(resultado == 2){
+    else if(resultado == -2){
         perror("PUBLISH FAIL, USER NOT CONNECTED\n");
         return -1;
     }
-    else if(resultado == 3){
+    else if(resultado == -3){
         perror("PUBLISH FAIL, CONTENT ALREADY PUBLISHED\n");
         return -1;
     }
-    else if(resultado == 4){
+    else if(resultado == -4){
         perror("PUBLISH FAIL\n");
         return -1;
     }

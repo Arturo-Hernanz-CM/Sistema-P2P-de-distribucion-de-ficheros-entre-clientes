@@ -28,7 +28,7 @@ No existe el usuario = 1 -> CONNECT FAIL, USER DOES NOT EXIST
 Usuario ya conectado = 2 -> USER ALREADY CONNECTED
 Error = 3 -> CONNECT FAIL
 */
-int connect_user(char* username, int* port, char* ip);
+int connect_user(char* username, int port, char* ip);
 
 /*
 Desconecta al cliente del sistema.
@@ -64,14 +64,15 @@ int delete(char * username_solicitante, char * file_name);
 /*
 Comprueba si un usuario está registrado.
 Éxito = Estructura con el nodo
-Error = Estructura con error = -1
+Error = Estructura con error =  -1 -> Usuario no registrado
 */
 Exist is_registered(char * username);
 
 /*
 Comprueba si un usuario está conectado.
 Éxito = Estructura con los datos de la conexion
-Error = Estructura con error = -1
+Error = Estructura con error =  -1 -> Usuario no registrado
+                                -2 -> Usuario no conectado
 */
 Conexion is_connected(char * username);
 

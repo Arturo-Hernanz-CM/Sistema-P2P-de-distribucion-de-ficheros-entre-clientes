@@ -28,11 +28,18 @@ char ip_cliente[INET_ADDRSTRLEN];
 
 // Recibir la peticion del cliente
 int recibir_peticion(int socket_cliente_descriptor, Peticion * peticion_local){
-    int32_t operacion_;
+    int32_t operacion_, port_;
 
     // Recibir operacion
     if(recvMessage(socket_cliente_descriptor, (char *) &operacion_, sizeof(operacion_)) == -1){
         perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la operacion\n");
+        close(socket_cliente_descriptor);
+        return -1;
+    }
+
+    // Recibir puerto
+    if(recvMessage(socket_cliente_descriptor, (char *) &port_, sizeof(port_)) == -1){
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir el puerto\n");
         close(socket_cliente_descriptor);
         return -1;
     }
@@ -74,6 +81,7 @@ int recibir_peticion(int socket_cliente_descriptor, Peticion * peticion_local){
 
     // Asignacion de valores a la estructura
     peticion_local->operacion = ntohl(operacion_);
+    peticion_local->port_escucha = ntohl(port_);
 
     return 0;
 }
@@ -89,6 +97,7 @@ void recibir_socket(int *socket_cliente_descriptor){
     int32_t resp;
     char * user_ip_port = NULL;
     Nodo * nodo = NULL;
+    int error = 0;
 
     // Copiar el descriptor del socket del cliente
     pthread_mutex_lock(&mutex_mensaje);
@@ -101,46 +110,63 @@ void recibir_socket(int *socket_cliente_descriptor){
     if (recibir_peticion(socket_cliente_descriptor_local, &peticion_local)){
         perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al recibir la petición\n");
         close(socket_cliente_descriptor_local);
-        respuesta = -1;
+        respuesta = -5;
     }
 
     // Ejecutar la petición
     if (peticion_local.operacion == 0) {    // Función register
         respuesta = register_user(peticion_local.username);
+        error = -2;
     }
     else if (peticion_local.operacion == 1) {   // Función unregister
         respuesta = unregister(peticion_local.username);
+        error = -2;
     }
     else if (peticion_local.operacion == 2) {   // Función connect
-        respuesta = connect_user(peticion_local.username, &puerto_cliente, ip_cliente);
+        respuesta = connect_user(peticion_local.username, peticion_local.port_escucha, ip_cliente);
+        error = -3;
     }
     else if (peticion_local.operacion == 3) {   // Función disconnect
         respuesta = disconnect(peticion_local.username);
+        error = -3;
     }
     else if (peticion_local.operacion == 4) {   // Función publish
         respuesta = publish(peticion_local.username, peticion_local.filename1, peticion_local.description);
+        error = -4;
     }
     else if (peticion_local.operacion == 5) {   // Función delete
         respuesta = delete(peticion_local.username, peticion_local.filename1);
+        error = -4;
     }
-    else if (peticion_local.operacion == 6){
+    else if (peticion_local.operacion == 6){    // Función listusers
         conexion = is_connected(peticion_local.username);
         respuesta = conexion.error;
+        error = -3;
     }
-    else if(peticion_local.operacion == 7){
+    else if(peticion_local.operacion == 7){     // Función listcontent
         conexion = is_connected(peticion_local.username);
-        respuesta = conexion.error;
+        Conexion conexion2 = is_connected(peticion_local.username2);
+        if(conexion2.error == -2){
+           respuesta = -3; 
+        }
+        else{
+            respuesta = conexion.error;
+        }
+        error = -4;
     }
     else {
-        respuesta = -1;
+        respuesta = -5;
     }
 
     // Enviar la respuesta
     printf("Enviando respuesta a cliente: %d\n", socket_cliente_descriptor_local);
     
+    if(respuesta <= error){
+        respuesta = error;
+    }
     res = htonl(respuesta);
-    if(peticion_local.operacion == 6) {
-        if(respuesta == -1){
+    if(peticion_local.operacion == 6) { // Función listusers
+        if(respuesta < 0){
             resp = 0;
             if(sendMessage(socket_cliente_descriptor_local, (char*) &resp, sizeof(resp)) == -1) {
                 perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
@@ -149,31 +175,43 @@ void recibir_socket(int *socket_cliente_descriptor){
         }
         else{
             resp = base_datos->size;
-            if(sendMessage(socket_cliente_descriptor_local, (char*) &resp, sizeof(resp)) == -1) {
+            int32_t resp2 = htonl(resp);
+            int32_t tot_size;
+            
+            if(sendMessage(socket_cliente_descriptor_local, (char*) &resp2, sizeof(resp2)) == -1) {
                 perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
                 close(socket_cliente_descriptor_local);
             }  
             nodo = base_datos->inicio;
             for (int i = 0; i < resp; i++){
-                int total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + sizeof(nodo->datos_conexion->port) + 1;
-                user_ip_port = (char *) malloc(sizeof(nodo->username) + sizeof(nodo->datos_conexion->ip) + sizeof(nodo->datos_conexion->port));
+                int total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + 6; // max 5 digits port + null
+                user_ip_port = (char *) malloc(total_size);
                 if(user_ip_port == NULL){
                     perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al reservar memoria");
                     close(socket_cliente_descriptor_local);
                 }
 
-                snprintf(user_ip_port, total_size, "%s %s %d", nodo->username, nodo->datos_conexion->ip, *nodo->datos_conexion->port);
-
-                if(sendMessage(socket_cliente_descriptor_local, (char*) &user_ip_port, sizeof(user_ip_port)) == -1) {
+                tot_size = htonl(total_size);
+                if(sendMessage(socket_cliente_descriptor_local, (char*) &tot_size, sizeof(tot_size)) == -1) {
                     perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
                     close(socket_cliente_descriptor_local);
-                } 
+                    free(user_ip_port);
+                }
+
+                snprintf(user_ip_port, total_size, "%s %s %d", nodo->username, nodo->datos_conexion->ip, nodo->datos_conexion->port);
+
+                if(sendMessage(socket_cliente_descriptor_local, user_ip_port, strlen(user_ip_port)+1) == -1) {
+                    perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
+                    close(socket_cliente_descriptor_local);
+                    free(user_ip_port);
+                }
                 free(user_ip_port);
+                nodo = nodo->siguiente;
             }
         }
 
     }
-    else if(peticion_local.operacion == 7){
+    else if(peticion_local.operacion == 7){ // Función listcontent
         if(respuesta == -1){
             resp = 0;
             if(sendMessage(socket_cliente_descriptor_local, (char*) &resp, sizeof(resp)) == -1) {

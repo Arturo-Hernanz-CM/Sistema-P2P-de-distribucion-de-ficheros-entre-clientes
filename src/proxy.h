@@ -19,7 +19,7 @@ int enviar_peticion(int socket_cliente, Peticion * peticion);
 
 void recibir_cliente(int * socket_cliente_descriptor);
 int recibir_peticion(int socket_cliente_descriptor, Peticion * peticion_local);
-int escuchar_socket_cliente(void);
+void* escuchar_socket_cliente(void* arg);
 int comunicacion_cliente(Peticion * peticion, char * ip_dest, int port_dest);
 
 #endif
