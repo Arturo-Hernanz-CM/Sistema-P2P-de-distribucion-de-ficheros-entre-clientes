@@ -32,49 +32,49 @@ int recibir_peticion(int socket_cliente_descriptor, Peticion * peticion_local){
 
     // Recibir operacion
     if(recvMessage(socket_cliente_descriptor, (char *) &operacion_, sizeof(operacion_)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la operacion\n");
+        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la operacion\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir puerto
     if(recvMessage(socket_cliente_descriptor, (char *) &port_, sizeof(port_)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir el puerto\n");
+        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir el puerto\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir username
     if(recvMessage(socket_cliente_descriptor, peticion_local->username, sizeof(peticion_local->username)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username\n");
+        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username\n");
         close(socket_cliente_descriptor);
         return -1;
     }
     
     // Recibir username2
     if(recvMessage(socket_cliente_descriptor, peticion_local->username2, sizeof(peticion_local->username2)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username2\n");
+        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username2\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir filename1
     if(recvMessage(socket_cliente_descriptor, peticion_local->filename1, sizeof(peticion_local->filename1)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename1\n");
+        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename1\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir descripcion    
     if(recvMessage(socket_cliente_descriptor, peticion_local->description, sizeof(peticion_local->description)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la descripcion\n");
+        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la descripcion\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir filename2
     if(recvMessage(socket_cliente_descriptor, peticion_local->filename2, sizeof(peticion_local->filename2)) == -1){
-        perror("ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename2\n");
+        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename2\n");
         close(socket_cliente_descriptor);
         return -1;
     }    
@@ -90,13 +90,14 @@ int recibir_peticion(int socket_cliente_descriptor, Peticion * peticion_local){
 void recibir_socket(int *socket_cliente_descriptor){
     // Variables
     int socket_cliente_descriptor_local;
-    Conexion conexion;
+    Conexion conexion, conexion2;
     Peticion peticion_local = {0};
     int respuesta;
     int32_t res;
     int32_t resp;
     char * user_ip_port = NULL;
     Nodo * nodo = NULL;
+    Publicacion * publicacion = NULL;
     int error = 0;
 
     // Copiar el descriptor del socket del cliente
@@ -108,44 +109,52 @@ void recibir_socket(int *socket_cliente_descriptor){
 
     // Recibe los datos del cliente
     if (recibir_peticion(socket_cliente_descriptor_local, &peticion_local)){
-        perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al recibir la petición\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al recibir la petición\n");
         close(socket_cliente_descriptor_local);
         respuesta = -5;
     }
 
     // Ejecutar la petición
     if (peticion_local.operacion == 0) {    // Función register
+        printf("\ns> OPERATION REGISTER FROM %s\n", peticion_local.username);
         respuesta = register_user(peticion_local.username);
         error = -2;
     }
     else if (peticion_local.operacion == 1) {   // Función unregister
+        printf("\ns> OPERATION UNREGISTER FROM %s\n", peticion_local.username);
         respuesta = unregister(peticion_local.username);
         error = -2;
     }
     else if (peticion_local.operacion == 2) {   // Función connect
+        printf("\ns> OPERATION CONNECT FROM %s\n", peticion_local.username);
         respuesta = connect_user(peticion_local.username, peticion_local.port_escucha, ip_cliente);
         error = -3;
     }
     else if (peticion_local.operacion == 3) {   // Función disconnect
+        printf("\ns> OPERATION DISCONNECT FROM %s\n", peticion_local.username);
         respuesta = disconnect(peticion_local.username);
         error = -3;
     }
     else if (peticion_local.operacion == 4) {   // Función publish
+        printf("\ns> OPERATION PUBLISH FROM %s\n", peticion_local.username);
         respuesta = publish(peticion_local.username, peticion_local.filename1, peticion_local.description);
         error = -4;
     }
     else if (peticion_local.operacion == 5) {   // Función delete
+        printf("\ns> OPERATION DELETE FROM %s\n", peticion_local.username);
         respuesta = delete(peticion_local.username, peticion_local.filename1);
         error = -4;
     }
     else if (peticion_local.operacion == 6){    // Función listusers
+        printf("\ns> OPERATION LIST_USERS FROM %s\n", peticion_local.username);
         conexion = is_connected(peticion_local.username);
         respuesta = conexion.error;
         error = -3;
     }
     else if(peticion_local.operacion == 7){     // Función listcontent
+        printf("\ns> OPERATION LIST_CONTENT FROM %s\n", peticion_local.username);
         conexion = is_connected(peticion_local.username);
-        Conexion conexion2 = is_connected(peticion_local.username2);
+        conexion2 = is_connected(peticion_local.username2);
         if(conexion2.error == -2){
            respuesta = -3; 
         }
@@ -154,12 +163,32 @@ void recibir_socket(int *socket_cliente_descriptor){
         }
         error = -4;
     }
+    else if(peticion_local.operacion == 8){     // Función getvalue
+        printf("\ns> OPERATION GET_VALUE FROM %s\n", peticion_local.username);
+        conexion = is_connected(peticion_local.username);
+        conexion2 = is_connected(peticion_local.username2);
+        if(conexion.error < 0){
+           respuesta = -1; 
+        }
+        else if(conexion2.error < 0){
+           respuesta = -1; 
+        }
+        else{
+            respuesta = 0;
+        }
+        Published published = is_published(peticion_local.filename1, conexion.exist.nodo_usuario->publicaciones);
+        if(published.error < 0){
+            respuesta = -1;
+        }
+
+        error = -4;
+    }
     else {
         respuesta = -5;
     }
 
     // Enviar la respuesta
-    printf("Enviando respuesta a cliente: %d\n", socket_cliente_descriptor_local);
+    printf("\ns> Enviando respuesta a cliente: %d\n", socket_cliente_descriptor_local);
     
     if(respuesta <= error){
         respuesta = error;
@@ -169,7 +198,7 @@ void recibir_socket(int *socket_cliente_descriptor){
         if(respuesta < 0){
             resp = 0;
             if(sendMessage(socket_cliente_descriptor_local, (char*) &resp, sizeof(resp)) == -1) {
-                perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
                 close(socket_cliente_descriptor_local);
             }  
         }
@@ -179,7 +208,7 @@ void recibir_socket(int *socket_cliente_descriptor){
             int32_t tot_size;
             
             if(sendMessage(socket_cliente_descriptor_local, (char*) &resp2, sizeof(resp2)) == -1) {
-                perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
                 close(socket_cliente_descriptor_local);
             }  
             nodo = base_datos->inicio;
@@ -187,13 +216,13 @@ void recibir_socket(int *socket_cliente_descriptor){
                 int total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + 6; // max 5 digits port + null
                 user_ip_port = (char *) malloc(total_size);
                 if(user_ip_port == NULL){
-                    perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al reservar memoria");
+                    perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al reservar memoria");
                     close(socket_cliente_descriptor_local);
                 }
 
                 tot_size = htonl(total_size);
                 if(sendMessage(socket_cliente_descriptor_local, (char*) &tot_size, sizeof(tot_size)) == -1) {
-                    perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
+                    perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
                     close(socket_cliente_descriptor_local);
                     free(user_ip_port);
                 }
@@ -201,7 +230,7 @@ void recibir_socket(int *socket_cliente_descriptor){
                 snprintf(user_ip_port, total_size, "%s %s %d", nodo->username, nodo->datos_conexion->ip, nodo->datos_conexion->port);
 
                 if(sendMessage(socket_cliente_descriptor_local, user_ip_port, strlen(user_ip_port)+1) == -1) {
-                    perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
+                    perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
                     close(socket_cliente_descriptor_local);
                     free(user_ip_port);
                 }
@@ -212,17 +241,86 @@ void recibir_socket(int *socket_cliente_descriptor){
 
     }
     else if(peticion_local.operacion == 7){ // Función listcontent
-        if(respuesta == -1){
+        if(respuesta < 0){
             resp = 0;
-            if(sendMessage(socket_cliente_descriptor_local, (char*) &resp, sizeof(resp)) == -1) {
-                perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+            int32_t resp2 = htonl(resp);
+            if(sendMessage(socket_cliente_descriptor_local, (char*) &resp2, sizeof(resp2)) == -1) {
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
                 close(socket_cliente_descriptor_local);
             }  
+        }
+        else{
+            nodo = conexion.exist.nodo_usuario;
+            if(nodo->publicaciones == NULL){
+                resp = 0;
+            }
+            resp = nodo->publicaciones->size;
+            int32_t resp3 = htonl(resp);
+            int32_t tot_size;
+            
+            if(sendMessage(socket_cliente_descriptor_local, (char*) &resp3, sizeof(resp3)) == -1) {
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
+                close(socket_cliente_descriptor_local);
+            }  
+            if(resp>0){
+                publicacion = nodo->publicaciones->inicio;
+            }
+            for (int i = 0; i < resp; i++){
+                int total_size = strlen(publicacion->filename) + 1; // max 5 digits port + null
+                user_ip_port = (char *) malloc(total_size);
+                if(user_ip_port == NULL){
+                    perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al reservar memoria");
+                    close(socket_cliente_descriptor_local);
+                }
+
+                tot_size = htonl(total_size);
+                if(sendMessage(socket_cliente_descriptor_local, (char*) &tot_size, sizeof(tot_size)) == -1) {
+                    perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
+                    close(socket_cliente_descriptor_local);
+                    free(user_ip_port);
+                }
+
+                snprintf(user_ip_port, total_size, "%s", publicacion->filename);
+
+                if(sendMessage(socket_cliente_descriptor_local, user_ip_port, strlen(user_ip_port)+1) == -1) {
+                    perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
+                    close(socket_cliente_descriptor_local);
+                    free(user_ip_port);
+                }
+                free(user_ip_port);
+                publicacion = publicacion->siguiente;
+            }
+        }
+    }
+    else if(peticion_local.operacion == 8){ // Función getfile
+        if(respuesta < 0){
+            if(sendMessage(socket_cliente_descriptor_local, (char *) &res, sizeof(res)) == -1) {
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+                close(socket_cliente_descriptor_local);
+            }  
+        }
+        else{
+            int32_t port_cl = htonl(conexion.exist.nodo_usuario->datos_conexion->port);
+            if(sendMessage(socket_cliente_descriptor_local, (char *) &port_cl, sizeof(port_cl)) == -1) {
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+                close(socket_cliente_descriptor_local);
+            }
+
+            int32_t tot_size = htonl(strlen(conexion.exist.nodo_usuario->datos_conexion->ip)+1);
+            if(sendMessage(socket_cliente_descriptor_local, (char *) &tot_size, sizeof(tot_size)) == -1) {
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+                close(socket_cliente_descriptor_local);
+            }
+
+            if(sendMessage(socket_cliente_descriptor_local, conexion.exist.nodo_usuario->datos_conexion->ip, strlen(conexion.exist.nodo_usuario->datos_conexion->ip)+1) == -1) {
+                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+                close(socket_cliente_descriptor_local);
+            }
         }
     }
     else{
         if(sendMessage(socket_cliente_descriptor_local, (char *) &res, sizeof(res)) == -1) {
-            perror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
             close(socket_cliente_descriptor_local);
         }  
     }     
@@ -230,15 +328,19 @@ void recibir_socket(int *socket_cliente_descriptor){
 
 int main(int argc, char **argv) {
     // Comprobacion de argumentos
-    if(argc != 2) {
-        perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Número de argumentos incorrecto\n");
+    if(argc != 3) {
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Número de argumentos incorrecto\n");
+        return -1;
+    }
+    if(strcmp(argv[1], "-p") != 0) {
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Argumentos incorrectos\n");
         return -1;
     }
 
     // Inicializar la base de datos
     base_datos = (Lista *) malloc(sizeof(Lista));
     if (base_datos == NULL) {
-        perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Error al reservar memoria para la lista de claves");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Error al reservar memoria para la lista de claves");
         return -1;
     }
     base_datos->inicio = NULL;
@@ -267,17 +369,17 @@ int main(int argc, char **argv) {
     
     // Crear socket servidor
 	if ((socket_servidor_descriptor =  socket(AF_INET, SOCK_STREAM, 0))<0){
-        perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Error al crear el socket del servidor");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Error al crear el socket del servidor");
 		return 0;
 	}
 	val = 1;
 	setsockopt(socket_servidor_descriptor, SOL_SOCKET, SO_REUSEADDR, (char *) &val, sizeof(int));
 
 	// Guardar la info del socket del servidor en la estructura
-    puerto_servidor = atoi(argv[1]);
+    puerto_servidor = atoi(argv[2]);
     if(puerto_servidor == 0) {
-        if(strcmp(argv[1], "0") != 0) {
-            perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Error al obtener el puerto del servidor\n");
+        if(strcmp(argv[2], "0") != 0) {
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Error al obtener el puerto del servidor\n");
             return -1;
         }
     }
@@ -290,34 +392,46 @@ int main(int argc, char **argv) {
 	// Asignar los datos del servidor al socket del servidor
 	err = bind(socket_servidor_descriptor, (const struct sockaddr *)&socket_servidor, sizeof(socket_servidor));
 	if (err == -1) {
-        perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Error al asignar los datos del servidor al socket del servidor");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Error al asignar los datos del servidor al socket del servidor");
 		return -1;
 	}
 
     // Poner el socket del servidor en modo de escucha
 	err = listen(socket_servidor_descriptor, SOMAXCONN);
 	if (err == -1) {
-        perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Error al poner el socket del servidor en modo de escucha");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Error al poner el socket del servidor en modo de escucha");
 		return -1;
 	}
 
     // Peticiones
 	pthread_attr_setdetachstate(&thread_att, PTHREAD_CREATE_DETACHED);      // threads independientes
+
+    // Print inicial
+    char ip_str[INET_ADDRSTRLEN];
+
+    inet_ntop(AF_INET, &socket_servidor.sin_addr, ip_str, sizeof(ip_str));
+    printf("s> init server %s:%d\n", ip_str, ntohs(socket_servidor.sin_port));
+
+    // Recibir conexiones
     while(1) {
+        fflush(stdout);
+        printf("s> ");
+        fflush(stdout);
+
         // Aceptar la conexion
         socket_cliente_descriptor = accept(socket_servidor_descriptor, (struct sockaddr *)&socket_cliente, &size);
         if (socket_cliente_descriptor < 0) {
-            perror("ERROR:\nFile: servidor.c\nFunction: main\nError: Error al aceptar la conexion");
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: main\nError: Error al aceptar la conexion");
             return -1;
         }
 
         // Info del cliente
         inet_ntop(AF_INET, &(socket_cliente.sin_addr), ip_cliente, INET_ADDRSTRLEN);
         puerto_cliente = ntohs(socket_cliente.sin_port);
-        printf("Conexión de cliente %s:%d\n", ip_cliente, puerto_cliente);
+        //printf("Conexión de cliente %s:%d\n", ip_cliente, puerto_cliente);
 
         // Recibir peticion
-        printf("\nRecibiendo peticion del cliente.\n");
+        //printf("\nRecibiendo peticion del cliente.\n");
         if(pthread_create(&thread, &thread_att, (void*) recibir_socket, &socket_cliente_descriptor) == 0) {
             pthread_mutex_lock(&mutex_mensaje);
             while(ocupado == 0) {

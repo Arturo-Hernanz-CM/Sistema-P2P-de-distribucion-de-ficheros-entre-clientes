@@ -29,7 +29,7 @@ claves.listusers.restype = ctypes.c_int
 claves.listcontent.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 claves.listcontent.restype = ctypes.c_int
 
-claves.get_file.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
+claves.get_file.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 claves.get_file.restype = ctypes.c_int
 
 class client:
@@ -178,10 +178,13 @@ class client:
     @staticmethod
 
     def  delete(fileName) :
+        if (client.username_conectado is None) :
+
+            return client.RC.USER_ERROR
 
         filename = fileName.encode("utf-8")
 
-        result = claves.delete(filename)
+        result = claves.delete(client.username_conectado,filename)
 
         if (result == 0) :
 
@@ -234,12 +237,16 @@ class client:
     @staticmethod
 
     def  getfile(user,  remote_FileName,  local_FileName) :
+        if (client.username_conectado is None) :
+
+            return client.RC.USER_ERROR
+
 
         username = user.encode("utf-8")
         remote_filename = remote_FileName.encode("utf-8")
         local_filename = local_FileName.encode("utf-8")
 
-        result = claves.get_file(username, remote_filename, client.username_conectado, local_filename, len(local_filename))
+        result = claves.get_file(username, client.username_conectado, remote_filename, local_filename)
 
         if (result == 0) :
 
@@ -248,6 +255,15 @@ class client:
         if (result == 1) :
 
             return client.RC.USER_ERROR
+        
+    @staticmethod
+
+    def quit():
+        if (client.username_conectado is None) :
+
+            return client.RC.USER_ERROR
+        
+        claves.quit(client.username_conectado)
 
 
 
@@ -394,6 +410,7 @@ class client:
                     elif(line[0]=="QUIT") :
 
                         if (len(line) == 1) :
+                            client.quit()
 
                             break
 

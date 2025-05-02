@@ -18,7 +18,7 @@ int register_user(char* username){
 
     // Comprobaciones
     if(sizeof(*username) > 256){
-        perror("ERROR:\nFile: claves.c\nFunction: register_user\nError: El username es demasiado largo");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: register_user\nError: El username es demasiado largo");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -2;
@@ -26,13 +26,13 @@ int register_user(char* username){
     Exist exist;
     exist = is_registered(username);
     if(exist.error == 0){
-        perror("ERROR:\nFile: claves.c\nFunction: register_user\nError: El usuario ya existe");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: register_user\nError: El usuario ya existe");
         return -1;
     }
 
     Nodo *nodo = (Nodo *) malloc(sizeof(Nodo));
     if (nodo == NULL) {
-        perror("ERROR:\nFile: claves.c\nFunction: set_value\nError: Error al reservar memoria para guardar un nodo");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: set_value\nError: Error al reservar memoria para guardar un nodo");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -2;
@@ -41,7 +41,7 @@ int register_user(char* username){
     // Guardar los datos
     nodo->username = (char*)malloc(strlen(username)+1);
     if (nodo->username == NULL) {
-        perror("ERROR:\nFile: claves.c\nFunction: set_value\nError: Error al reservar memoria para guardar el value1");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: set_value\nError: Error al reservar memoria para guardar el value1");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -2;
@@ -55,27 +55,19 @@ int register_user(char* username){
         nodo->anterior = NULL;
         nodo->siguiente = NULL;
         nodo->index = 0;
-
-        base_datos = (Lista *) malloc(sizeof(Lista));
-        if (base_datos == NULL) {
-            perror("ERROR:\nFile: claves.c\nFunction: register_user\nError: Error al reservar memoria para la base de datos");
-            pthread_mutex_unlock(&mutex_funcion);
-            bloqueado = 0;
-            return -2;
-        }
-
         base_datos->inicio = nodo;
         base_datos->final = nodo;
         base_datos->size = 1;
     }
     else{
         nodo->anterior = base_datos->final;
+        base_datos->final->siguiente = nodo;
         nodo->siguiente = NULL;
+        base_datos->size++;
         nodo->index = base_datos->size;
         base_datos->final = nodo;
-        base_datos->size++;
     }
-    printf("Usuario registrado correctamente.\n");
+    printf("\ns> Usuario registrado correctamente.\n");
 
     pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
@@ -91,7 +83,7 @@ int unregister(char* username){
     Exist exist;
     exist = is_registered(username);
     if(exist.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: unregister\nError: El usuario no existe");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: unregister\nError: El usuario no existe");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
@@ -112,7 +104,7 @@ int unregister(char* username){
         base_datos->size--;
         free(exist.nodo_usuario);
     }
-    printf("Datos asociados a la clave destruidos.\n");
+    printf("\ns> Cliente eliminado.\n");
     pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
     return 0;
@@ -127,13 +119,13 @@ int connect_user(char* username, int port, char* ip){
     Conexion conexion;
     conexion = is_connected(username);
     if(conexion.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: connect_user\nError: El usuario no está registrado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: connect_user\nError: El usuario no está registrado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
     }
     else if(conexion.error == 0){
-        perror("ERROR:\nFile: claves.c\nFunction: connect_user\nError: El usuario ya está conectado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: connect_user\nError: El usuario ya está conectado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -2;
@@ -142,7 +134,7 @@ int connect_user(char* username, int port, char* ip){
     Datos_conexion *datos_conexion = NULL;
     datos_conexion = (Datos_conexion *) malloc(sizeof(Datos_conexion));
     if(datos_conexion == NULL){
-        perror("ERROR:\nFile: claves.c\nFunction: connect_user\nError: Error al reservar memoria para guardar los datos de la conexion");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: connect_user\nError: Error al reservar memoria para guardar los datos de la conexion");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -3;
@@ -151,15 +143,15 @@ int connect_user(char* username, int port, char* ip){
     if(conexion.exist.nodo_usuario->datos_conexion == NULL){
         conexion.exist.nodo_usuario->datos_conexion = (Datos_conexion *) malloc(sizeof(Datos_conexion));
         if(conexion.exist.nodo_usuario->datos_conexion == NULL){
-            perror("ERROR:\nFile: claves.c\nFunction: connect\nError: Error al reservar memoria para guardar los datos de la conexion");
+            perror("\ns> ERROR:\nFile: claves.c\nFunction: connect\nError: Error al reservar memoria para guardar los datos de la conexion");
             pthread_mutex_unlock(&mutex_funcion);
             bloqueado = 0;
             return -3;
         }
 
-        datos_conexion->ip = (char *) malloc(sizeof(char));
+        datos_conexion->ip = (char *) malloc(strlen(ip) + 1);
         if (datos_conexion->ip == NULL) {
-            perror("ERROR:\nFile: claves.c\nFunction: connect\nError: Error al reservar memoria para guardar la IP");
+            perror("\ns> ERROR:\nFile: claves.c\nFunction: connect\nError: Error al reservar memoria para guardar la IP");
             pthread_mutex_unlock(&mutex_funcion);
             bloqueado = 0;
             return -3;
@@ -170,6 +162,7 @@ int connect_user(char* username, int port, char* ip){
         conexion.exist.nodo_usuario->datos_conexion->ip = strdup(ip);
     }
 
+    printf("\ns> Usuario conectado.\n");
     free(datos_conexion->ip);
     free(datos_conexion);
     pthread_mutex_unlock(&mutex_funcion);
@@ -187,13 +180,13 @@ int disconnect(char* username){
     Conexion conexion;
     conexion = is_connected(username);
     if(conexion.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: disconnect\nError: El usuario no está registrado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: disconnect\nError: El usuario no está registrado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
     }
     else if(conexion.error == -2){
-        perror("ERROR:\nFile: claves.c\nFunction: disconnect\nError: El usuario no está conectado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: disconnect\nError: El usuario no está conectado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -2;
@@ -203,6 +196,7 @@ int disconnect(char* username){
     free(conexion.exist.nodo_usuario->datos_conexion);
     conexion.exist.nodo_usuario->datos_conexion = NULL;
 
+    printf("\ns> Usuario desconectado.\n");
     pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
     return 0;
@@ -214,8 +208,8 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
     bloqueado = 1;
 
     // Comprobaciones
-    if(sizeof(*file_name) > 256){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El nombre del fichero es demasiado largo");
+    if(strlen(file_name) > 256){
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: El nombre del fichero es demasiado largo");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
@@ -224,13 +218,13 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
     Conexion conexion;
     conexion = is_connected(username_publisher);
     if(conexion.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está registrado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está registrado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
     }
     else if(conexion.error == -2){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está conectado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está conectado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -2;
@@ -240,7 +234,7 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
     Lista_publicaciones * publicaciones = NULL;
     publicaciones = (Lista_publicaciones *) malloc(sizeof(Lista_publicaciones));
     if(publicaciones == NULL){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: Error al reservar memoria para guardar la lista de publicaciones");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: Error al reservar memoria para guardar la lista de publicaciones");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
@@ -249,14 +243,14 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
     Publicacion * publicacion = NULL;
     publicacion = (Publicacion *) malloc(sizeof(Publicacion));
     if(publicacion == NULL){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: Error al reservar memoria para guardar la publicacion");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: Error al reservar memoria para guardar la publicacion");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
     }
 
-    strcpy(publicacion->filename, file_name);
-    strcpy(publicacion->descripcion, descripcion);
+    publicacion->filename = strdup(file_name);
+    publicacion->descripcion = strdup(descripcion);
 
     if(conexion.exist.nodo_usuario->publicaciones == NULL){
         publicaciones->inicio = publicacion;
@@ -276,7 +270,7 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
             publicaciones->size++;
         }
         else{
-            perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El fichero ya está publicado");
+            perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: El fichero ya está publicado");
             pthread_mutex_unlock(&mutex_funcion);
             bloqueado = 0;
             return -3;
@@ -284,7 +278,7 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
         
     }
 
-
+    printf("\ns> Fichero publicado.\n");
     pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
     return 0;
@@ -299,13 +293,13 @@ int delete(char * username_solicitante, char * file_name){
     Conexion conexion;
     conexion = is_connected(username_solicitante);
     if(conexion.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está registrado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está registrado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -1;
     }
     else if(conexion.error == -2){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está conectado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: El usuario no está conectado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -2;
@@ -314,20 +308,27 @@ int delete(char * username_solicitante, char * file_name){
     Published published;
     published = is_published(file_name,conexion.exist.nodo_usuario->publicaciones);
     if(published.error == -1){
-        perror("ERROR:\nFile: claves.c\nFunction: publish\nError: El fichero no esta publicado");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: publish\nError: El fichero no esta publicado");
         pthread_mutex_unlock(&mutex_funcion);
         bloqueado = 0;
         return -3;
     }
 
     // Eliminar el fichero
-    published.publicacion->anterior->siguiente = published.publicacion->siguiente;
+    if(published.publicacion->anterior == NULL){
+        conexion.exist.nodo_usuario->publicaciones->inicio = published.publicacion->siguiente;
+    }
+    else{
+        published.publicacion->anterior->siguiente = published.publicacion->siguiente;
+    }
+
     if(published.publicacion->siguiente != NULL){
         published.publicacion->siguiente->anterior = published.publicacion->anterior;
         published.publicacion->siguiente->index = published.publicacion->index;
     }
     conexion.exist.nodo_usuario->publicaciones->size--;
 
+    printf("\ns> Fichero borrado.\n");
     pthread_mutex_unlock(&mutex_funcion);
     bloqueado = 0;
     return 0;
@@ -343,7 +344,7 @@ Exist is_registered(char * username){
     }
 
     if (base_datos == NULL){
-        perror("ERROR:\nFile: claves.c\nFunction: is_registered\nError: La lista esta vacia");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: is_registered\nError: La lista esta vacia");
         if(bloqueado == 0){
             pthread_mutex_unlock(&mutex_funcion);
         }
@@ -354,7 +355,7 @@ Exist is_registered(char * username){
         Nodo *nodo_actual = base_datos->inicio;
         for(int indice = 0; indice < base_datos->size; indice++){
             if(strcmp(nodo_actual->username, username) == 0){
-                printf("Usuario encontrado.\n");
+                printf("\ns> Usuario encontrado.\n");
                 if (bloqueado == 0){
                     pthread_mutex_unlock(&mutex_funcion);
                 }
@@ -393,7 +394,7 @@ Conexion is_connected(char * username){
         bloqueado = 2;
     }
     if (base_datos == NULL){
-        perror("ERROR:\nFile: claves.c\nFunction: is_connected\nError: La lista esta vacia");
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: is_connected\nError: La lista esta vacia");
         if(bloqueado == 0 || bloqueado == 2){
             pthread_mutex_unlock(&mutex_funcion);
         }
@@ -403,7 +404,7 @@ Conexion is_connected(char * username){
     else{
         exist = is_registered(username);
         if(exist.error == -1){
-            perror("ERROR:\nFile: claves.c\nFunction: is_connected\nError: El usuario no está registrado"); 
+            perror("\ns> ERROR:\nFile: claves.c\nFunction: is_connected\nError: El usuario no está registrado"); 
             if(bloqueado == 0 || bloqueado == 2){
                 pthread_mutex_unlock(&mutex_funcion);
             }
@@ -413,7 +414,7 @@ Conexion is_connected(char * username){
         }
         else{
             if(exist.nodo_usuario->datos_conexion == NULL){
-                perror("ERROR:\nFile: claves.c\nFunction: is_connected\nError: El usuario no está conectado"); 
+                perror("\ns> ERROR:\nFile: claves.c\nFunction: is_connected\nError: El usuario no está conectado"); 
                 if(bloqueado == 0 || bloqueado == 2){
                     pthread_mutex_unlock(&mutex_funcion);
                 }
@@ -444,7 +445,7 @@ Published is_published(char * file_name, Lista_publicaciones * publicaciones){
     Publicacion *publicacion_actual = publicaciones->inicio;
     for(int indice = 0; indice < publicaciones->size; indice++){
         if(strcmp(publicacion_actual->filename, file_name) == 0){
-            printf("Publicacion encontrada.\n");
+            printf("\ns> Publicacion encontrada.\n");
             if (bloqueado == 0){
                 pthread_mutex_unlock(&mutex_funcion);
             }
