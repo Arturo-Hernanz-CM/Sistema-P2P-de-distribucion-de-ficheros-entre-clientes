@@ -428,6 +428,10 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
     }
     
     // Comprobacion de las variables
+    if(puerto_servidor_char == NULL){
+        perror("ERROR:\nFile: proxy.c\nFunction: tratar_peticion\nError: Error al obtener el puerto del servidor\n");
+        return -1;
+    }
     puerto_servidor = atoi(puerto_servidor_char);
     if(puerto_servidor == 0){
         if (strcmp(puerto_servidor_char, "0") != 0) {
@@ -581,10 +585,15 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
             return error;
         }
         respuesta = ntohl(res);
-        if (respuesta == -1){
+        if (respuesta < 0) {
             perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: Error en la respuesta");
             close(socket_cliente_descriptor);
-            return error;
+            if(respuesta < error){
+                return error;
+            }
+            else{
+                return respuesta;
+            }
         }
     }
 

@@ -442,6 +442,16 @@ Published is_published(char * file_name, Lista_publicaciones * publicaciones){
     if (bloqueado == 0){
         pthread_mutex_lock(&mutex_funcion);
     }
+
+    if(publicaciones == NULL){
+        perror("\ns> ERROR:\nFile: claves.c\nFunction: is_published\nError: La lista esta vacia");
+        if(bloqueado == 0){
+            pthread_mutex_unlock(&mutex_funcion);
+        }
+        publicacion.error = -1;
+        return publicacion;
+    }
+
     Publicacion *publicacion_actual = publicaciones->inicio;
     for(int indice = 0; indice < publicaciones->size; indice++){
         if(strcmp(publicacion_actual->filename, file_name) == 0){

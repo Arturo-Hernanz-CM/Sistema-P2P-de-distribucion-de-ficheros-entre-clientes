@@ -163,7 +163,7 @@ void recibir_socket(int *socket_cliente_descriptor){
         }
         error = -4;
     }
-    else if(peticion_local.operacion == 8){     // Función getvalue
+    else if(peticion_local.operacion == 8){     // Función getfile
         printf("\ns> OPERATION GET_VALUE FROM %s\n", peticion_local.username);
         conexion = is_connected(peticion_local.username);
         conexion2 = is_connected(peticion_local.username2);
@@ -176,10 +176,14 @@ void recibir_socket(int *socket_cliente_descriptor){
         else{
             respuesta = 0;
         }
-        Published published = is_published(peticion_local.filename1, conexion.exist.nodo_usuario->publicaciones);
-        if(published.error < 0){
-            respuesta = -1;
+
+        if(respuesta > 0){
+            Published published = is_published(peticion_local.filename1, conexion.exist.nodo_usuario->publicaciones);
+            if(published.error < 0){
+                respuesta = -1;
+            }
         }
+        
 
         error = -4;
     }
