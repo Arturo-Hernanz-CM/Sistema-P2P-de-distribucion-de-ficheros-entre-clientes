@@ -88,6 +88,13 @@ int enviar_peticion(int socket_cliente_descriptor, Peticion * peticion){
         return -1;
     }
 
+    // Enviar fechahora
+    if (sendMessage(socket_cliente_descriptor, peticion->fecha_hora, sizeof(peticion->fecha_hora)) == -1) {
+        perror("ERROR:\nFile: proxy.c\nFunction: enviar_peticion\nError: Error al enviar la fechahora\n");
+        close(socket_cliente_descriptor);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -144,8 +151,16 @@ int recibir_peticion(int socket_cliente_descriptor, Peticion * resp){
         return -1;
     }    
 
+    // Recibir fechahora
+    if(recvMessage(socket_cliente_descriptor, resp->fecha_hora, sizeof(resp->fecha_hora)) == -1){
+        perror("ERROR:\nFile: proxy.c\nFunction: recibir_peticion\nError: Error al recibir la fechahora\n");
+        close(socket_cliente_descriptor);
+        return -1;
+    }
+
     // Asignacion de valores a la estructura
     resp->operacion = ntohl(operacion_);
+    resp->port_escucha = ntohs(port_);
 
     return 0;
 }

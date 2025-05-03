@@ -32,52 +32,59 @@ int recibir_peticion(int socket_cliente_descriptor, Peticion * peticion_local){
 
     // Recibir operacion
     if(recvMessage(socket_cliente_descriptor, (char *) &operacion_, sizeof(operacion_)) == -1){
-        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la operacion\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir la operacion\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir puerto
     if(recvMessage(socket_cliente_descriptor, (char *) &port_, sizeof(port_)) == -1){
-        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir el puerto\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir el puerto\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir username
     if(recvMessage(socket_cliente_descriptor, peticion_local->username, sizeof(peticion_local->username)) == -1){
-        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir username\n");
         close(socket_cliente_descriptor);
         return -1;
     }
     
     // Recibir username2
     if(recvMessage(socket_cliente_descriptor, peticion_local->username2, sizeof(peticion_local->username2)) == -1){
-        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir username2\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir username2\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir filename1
     if(recvMessage(socket_cliente_descriptor, peticion_local->filename1, sizeof(peticion_local->filename1)) == -1){
-        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename1\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir filename1\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir descripcion    
     if(recvMessage(socket_cliente_descriptor, peticion_local->description, sizeof(peticion_local->description)) == -1){
-        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir la descripcion\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir la descripcion\n");
         close(socket_cliente_descriptor);
         return -1;
     }
 
     // Recibir filename2
     if(recvMessage(socket_cliente_descriptor, peticion_local->filename2, sizeof(peticion_local->filename2)) == -1){
-        perror("\ns> ERROR:\nFile: proxy.c\nFunction: recibir_get_value\nError: Error al recibir filename2\n");
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir filename2\n");
         close(socket_cliente_descriptor);
         return -1;
     }    
+
+    // Recibir fechahora
+    if(recvMessage(socket_cliente_descriptor, peticion_local->fecha_hora, sizeof(peticion_local->fecha_hora)) == -1){
+        perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_peticion\nError: Error al recibir la fechahora\n");
+        close(socket_cliente_descriptor);
+        return -1;
+    }
 
     // Asignacion de valores a la estructura
     peticion_local->operacion = ntohl(operacion_);
