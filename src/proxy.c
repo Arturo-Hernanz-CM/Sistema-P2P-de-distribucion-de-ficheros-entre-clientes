@@ -619,7 +619,7 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
 
 // Funciones principales
 // Funcion para registrar un nuevo usuario
-int register_user(char* username, char* ip_s, char* port_s) {
+int register_user(char* username, char* ip_s, char* port_s, char * fecha_hora) {
     // Crear el hilo para escuchar peticiones de otros usuarios si no está creado
     if(hilo == 0){
         // Inicializar hilos
@@ -646,7 +646,8 @@ int register_user(char* username, char* ip_s, char* port_s) {
         return -1;
     }
     strcpy(puerto_servidor_char, port_s);
-
+    
+    strcpy(peticion.fecha_hora, fecha_hora);
     strcpy(peticion.username, username);
     peticion.operacion = 0;
 
@@ -657,7 +658,7 @@ int register_user(char* username, char* ip_s, char* port_s) {
         free(puerto_servidor_char);
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado <= -2){
         perror("REGISTER FAIL\n\n");
         free(ip_servidor);
         free(puerto_servidor_char);
@@ -668,8 +669,9 @@ int register_user(char* username, char* ip_s, char* port_s) {
 }
 
 // Funcion para dar de baja a un usuario
-int unregister(char* username) {
+int unregister(char* username, char * fecha_hora) {
     strcpy(peticion.username, username);
+    strcpy(peticion.fecha_hora, fecha_hora);
     peticion.operacion = 1;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
@@ -677,7 +679,7 @@ int unregister(char* username) {
         perror("USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado <= -2){
         perror("UNREGISTER FAIL\n\n");
         return -1;
     }
@@ -693,8 +695,9 @@ int unregister(char* username) {
 }
 
 // Funcion para conectar al cliente al sistema
-int connect_user(char* username) {
+int connect_user(char* username, char * fecha_hora) {
     strcpy(peticion.username, username);
+    strcpy(peticion.fecha_hora, fecha_hora);
     peticion.operacion = 2;
     peticion.port_escucha = puerto_escucha;
 
@@ -707,7 +710,7 @@ int connect_user(char* username) {
         perror("USER ALREADY CONNECTED\n\n");
         return -1;
     }
-    else if(resultado == -3){
+    else if(resultado <= -3){
         perror("CONNECT FAIL\n\n");
         return -1;
     }
@@ -717,8 +720,9 @@ int connect_user(char* username) {
 }
 
 // Funcion para desconectar al cliente del sistema
-int disconnect(char* username) {
+int disconnect(char* username, char * fecha_hora) {
     strcpy(peticion.username, username);
+    strcpy(peticion.fecha_hora, fecha_hora);
     peticion.operacion = 3;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
@@ -730,7 +734,7 @@ int disconnect(char* username) {
         perror("DISCONNECT FAIL, USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado == -3){
+    else if(resultado <= -3){
         perror("DISCONNECT FAIL\n\n");
         return -1;
     }
@@ -740,10 +744,11 @@ int disconnect(char* username) {
 }
 
 // Funcion para publicar un fichero
-int publish(char * username_publisher, char* file_name, char* descripcion) {
+int publish(char * username_publisher, char* file_name, char* descripcion, char * fecha_hora) {
     strcpy(peticion.username, username_publisher);
     strcpy(peticion.filename1, file_name);
     strcpy(peticion.description, descripcion);
+    strcpy(peticion.fecha_hora, fecha_hora);
     peticion.operacion = 4;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
@@ -759,7 +764,7 @@ int publish(char * username_publisher, char* file_name, char* descripcion) {
         perror("PUBLISH FAIL, CONTENT ALREADY PUBLISHED\n\n");
         return -1;
     }
-    else if(resultado == -4){
+    else if(resultado <= -4){
         perror("PUBLISH FAIL\n\n");
         return -1;
     }
@@ -769,9 +774,10 @@ int publish(char * username_publisher, char* file_name, char* descripcion) {
 }
 
 // Funcion para borrar un fichero
-int delete(char * username_solicitante, char * file_name) {
+int delete(char * username_solicitante, char * file_name, char * fecha_hora) {
     strcpy(peticion.username, username_solicitante);
     strcpy(peticion.filename1, file_name);
+    strcpy(peticion.fecha_hora, fecha_hora);
     peticion.operacion = 5;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
@@ -787,7 +793,7 @@ int delete(char * username_solicitante, char * file_name) {
         perror("DELETE FAIL, CONTENT NOT PUBLISHED\n\n");
         return -1;
     }
-    else if(resultado == -4){
+    else if(resultado <= -4){
         perror("DELETE FAIL\n\n");
         return -1;
     }
@@ -797,7 +803,7 @@ int delete(char * username_solicitante, char * file_name) {
 }
 
 // Funcion para obtener los usuarios
-int listusers(char * username) {
+int listusers(char * username, char * fecha_hora) {
     strcpy(peticion.username, username);
     peticion.operacion = 6;
 
@@ -810,7 +816,7 @@ int listusers(char * username) {
         perror("LISTUSERS FAIL, USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado == -3){
+    else if(resultado <= -3){
         perror("LISTUSERS FAIL\n\n");
         return -1;
     }
@@ -820,7 +826,7 @@ int listusers(char * username) {
 }
 
 // Funcion para obtener los ficheros
-int listcontent(char * username, char * username_solicitante) {
+int listcontent(char * username, char * username_solicitante, char * fecha_hora) {
     strcpy(peticion.username, username);
     strcpy(peticion.username2, username_solicitante);
     peticion.operacion = 7;
@@ -838,7 +844,7 @@ int listcontent(char * username, char * username_solicitante) {
         perror("LISTCONTENT FAIL, REMOTE USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado == -4){
+    else if(resultado <= -4){
         perror("LISTCONTENT FAIL\n\n");
         return -1;
     }
@@ -848,7 +854,7 @@ int listcontent(char * username, char * username_solicitante) {
 }
 
 // Funcion para obtener un fichero
-int get_file(char * username, char * username_solicitante, char * remote_filename, char * local_filename) {
+int get_file(char * username, char * username_solicitante, char * remote_filename, char * local_filename, char * fecha_hora) {
     strcpy(peticion.username, username);
     strcpy(peticion.username2, username_solicitante);
     strcpy(peticion.filename1, remote_filename);
@@ -874,7 +880,7 @@ int get_file(char * username, char * username_solicitante, char * remote_filenam
         perror("GETFILE FAIL, FILE DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -1){
+    else if(resultado <= -1){
         perror("GETFILE FAIL\n\n");
         return -1;
     }
@@ -884,8 +890,8 @@ int get_file(char * username, char * username_solicitante, char * remote_filenam
 }
 
 // Funcion para salir del proxy
-int quit(char * username) {
-    int disconnect_result = disconnect(username);
+int quit(char * username, char * fecha_hora) {
+    int disconnect_result = disconnect(username, fecha_hora);
     if(disconnect_result == -1){
         return -1;
     }

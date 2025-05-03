@@ -68,7 +68,7 @@ typedef struct{
     char filename2[256];
     int operacion;
     int port_escucha;
-    char fecha_hora[19];
+    char fecha_hora[20];
     /*
         0 -> register
         1 -> unregister

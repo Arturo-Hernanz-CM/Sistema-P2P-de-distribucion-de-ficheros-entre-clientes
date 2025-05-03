@@ -1,35 +1,36 @@
 from enum import Enum
+import zeep
 
 import argparse, ctypes, os
 lib_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "libclaves.so"))
 claves = ctypes.CDLL(lib_path)
 
 # Tipos de las funciones de la libreria
-claves.register_user.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+claves.register_user.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 claves.register_user.restype = ctypes.c_int
 
-claves.unregister.argtypes = [ctypes.c_char_p]
+claves.unregister.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 claves.unregister.restype = ctypes.c_int
 
-claves.connect_user.argtypes = [ctypes.c_char_p]
+claves.connect_user.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 claves.connect_user.restype = ctypes.c_int
 
-claves.disconnect.argtypes = [ctypes.c_char_p]
+claves.disconnect.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 claves.disconnect.restype = ctypes.c_int
 
-claves.publish.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+claves.publish.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 claves.publish.restype = ctypes.c_int
 
-claves.delete.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+claves.delete.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 claves.delete.restype = ctypes.c_int
 
 claves.listusers.argtypes = [ctypes.c_char_p]
 claves.listusers.restype = ctypes.c_int
 
-claves.listcontent.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+claves.listcontent.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 claves.listcontent.restype = ctypes.c_int
 
-claves.get_file.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+claves.get_file.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 claves.get_file.restype = ctypes.c_int
 
 class client:
@@ -65,9 +66,17 @@ class client:
     # ******************** METHODS *******************
 
 
+    # Funcion para el servicio web
+    @staticmethod
+
+    def fechahora():
+        wsdl_url = "http://localhost:8000/?wsdl"
+        soap = zeep.Client(wsdl=wsdl_url)
+        result = soap.service.fechahora()
+        return result 
 
 
-
+    # Funcion para registrar un usuario
     @staticmethod
 
     def  register(user) :
@@ -75,8 +84,10 @@ class client:
         ip = client._server.encode("utf-8")
         port = str(client._port).encode("utf-8")
         username = user.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.register_user(username, ip, port)
+        print(ip, port, username, fecha_hora)
+        result = claves.register_user(username, ip, port, fecha_hora)
 
         if (result == 0) :
 
@@ -89,14 +100,15 @@ class client:
 
 
    
-
+    # Funcion para eliminar un usuario
     @staticmethod
 
     def  unregister(user) :
 
         username = user.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.unregister(username)
+        result = claves.unregister(username, fecha_hora)
 
         if (result == 0) :
 
@@ -111,14 +123,15 @@ class client:
 
 
     
-
+    # Funcion para conectar un usuario
     @staticmethod
 
     def  connect(user) :
 
         username = user.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.connect_user(username)
+        result = claves.connect_user(username, fecha_hora)
 
         client.username_conectado = username
 
@@ -135,14 +148,15 @@ class client:
 
 
     
-
+    # Funcion para desconectar un usuario
     @staticmethod
 
     def  disconnect(user) :
 
         username = user.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.disconnect(username)
+        result = claves.disconnect(username, fecha_hora)
 
         client.username_conectado = None
 
@@ -155,15 +169,16 @@ class client:
             return client.RC.USER_ERROR
 
 
-
+    # Funcion para publicar un archivo
     @staticmethod
 
     def  publish(fileName,  description) :
 
         filename = fileName.encode("utf-8")
         descripcion = description.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.publish(client.username_conectado, filename, descripcion)
+        result = claves.publish(client.username_conectado, filename, descripcion, fecha_hora)
 
         if (result == 0) :
 
@@ -174,7 +189,7 @@ class client:
             return client.RC.USER_ERROR
 
 
-
+    # Funcion para eliminar un archivo
     @staticmethod
 
     def  delete(fileName) :
@@ -183,8 +198,9 @@ class client:
             return client.RC.USER_ERROR
 
         filename = fileName.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.delete(client.username_conectado,filename)
+        result = claves.delete(client.username_conectado,filename, fecha_hora)
 
         if (result == 0) :
 
@@ -195,7 +211,7 @@ class client:
             return client.RC.USER_ERROR
 
 
-
+    # Funcion para mostrar los usuarios
     @staticmethod
 
     def  listusers() :
@@ -204,7 +220,9 @@ class client:
 
             return client.RC.USER_ERROR
         
-        result = claves.listusers(client.username_conectado)
+        fecha_hora = client.fechahora().encode("utf-8")
+        
+        result = claves.listusers(client.username_conectado, fecha_hora)
 
         if (result == 0) :
 
@@ -215,14 +233,15 @@ class client:
             return client.RC.USER_ERROR
 
 
-
+    # Funcion para mostrar los archivos de un usuario
     @staticmethod
 
     def  listcontent(user) :
 
         username = user.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.listcontent(username, client.username_conectado)
+        result = claves.listcontent(username, client.username_conectado, fecha_hora)
 
         if (result == 0) :
 
@@ -233,7 +252,7 @@ class client:
             return client.RC.USER_ERROR
 
 
-
+    # Funcion para descargar un archivo de un usuario
     @staticmethod
 
     def  getfile(user,  remote_FileName,  local_FileName) :
@@ -245,8 +264,9 @@ class client:
         username = user.encode("utf-8")
         remote_filename = remote_FileName.encode("utf-8")
         local_filename = local_FileName.encode("utf-8")
+        fecha_hora = client.fechahora().encode("utf-8")
 
-        result = claves.get_file(username, client.username_conectado, remote_filename, local_filename)
+        result = claves.get_file(username, client.username_conectado, remote_filename, local_filename, fecha_hora)
 
         if (result == 0) :
 
@@ -256,6 +276,8 @@ class client:
 
             return client.RC.USER_ERROR
         
+    
+    # Funcion para salir
     @staticmethod
 
     def quit():
@@ -263,7 +285,9 @@ class client:
 
             return client.RC.USER_ERROR
         
-        claves.quit(client.username_conectado)
+        fecha_hora = client.fechahora().encode("utf-8")
+
+        claves.quit(client.username_conectado, fecha_hora)
 
 
 

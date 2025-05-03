@@ -2,23 +2,34 @@
 CC = gcc
 
 # Flags de compilación
-CFLAGS = -Wall -g -fPIC -pthread
+CFLAGS = -Wall -g -fPIC -pthread -DRPC_SVC_FG
 
 # Detección del sistema
 UNAME_S := $(shell uname -s)
 
 # Flags de compilación
-CFLAGS = -Wall -g -fPIC -pthread
-ifeq ($(UNAME_S), Linux)
-    CFLAGS += -lrt
+
+ifeq ($(UNAME_S),Linux)
+	CFLAGS += -I/usr/include/tirpc 
+	CFLAGS += -ltr
+	LDLIBS += -ltirpc
 endif
 
+
+ifeq ($(UNAME_S),Darwin)
+	CFLAGS += -I/opt/homebrew/Cellar/libtirpc/1.3.6/include/tirpc
+	LDLIBS += -L/opt/homebrew/Cellar/libtirpc/1.3.6/lib -ltirpc
+endif
+
+
 # Archivos fuente
-SRCS_SERVER = servidor.c claves.c lines.c
+SRCS_SERVER = servidor.c claves.c lines.c tuplas_clnt.c tuplas_xdr.c
+SRCS_SERVER_LOG = log_rpc.c tuplas_svc.c tuplas_xdr.c
 SRCS_PROXY = proxy.c lines.c
 
 # Archivos objeto
 OBJS_SERVER = $(SRCS_SERVER:.c=.o)
+OBJS_SERVER_LOG = $(SRCS_SERVER_LOG:.c=.o)
 OBJS_PROXY = $(SRCS_PROXY:.c=.o)
 
 # Librería compartida
@@ -26,13 +37,7 @@ LIB_NAME = libclaves.so
 
 # Ejecutables
 TARGET_SERVER = servidor
-TARGET_CLIENT0 = app-cliente-0
-TARGET_CLIENT1 = app-cliente-1
-TARGET_CLIENT6 = app-cliente-6
-TARGET_CLIENT2 = app-cliente-2
-TARGET_CLIENT3 = app-cliente-3
-TARGET_CLIENT4 = app-cliente-4
-TARGET_CLIENT5 = app-cliente-5
+TARGET_SERVER_LOG = servidor_log
 
 # Regla por defecto: compilar todo
 all: $(TARGET_SERVER) $(LIB_NAME)
@@ -40,6 +45,10 @@ all: $(TARGET_SERVER) $(LIB_NAME)
 # Compilar el servidor
 $(TARGET_SERVER): $(OBJS_SERVER)
 	$(CC) $(CFLAGS) -o $(TARGET_SERVER) $(OBJS_SERVER)
+
+# Compilar el servidor con logs
+$(TARGET_SERVER_LOG): $(OBJS_SERVER_LOG)
+	$(CC) $(CFLAGS) -o $(TARGET_SERVER_LOG) $(OBJS_SERVER_LOG)
 
 # Crear la librería compartida
 $(LIB_NAME): $(OBJS_PROXY)
@@ -51,4 +60,4 @@ $(LIB_NAME): $(OBJS_PROXY)
 
 # Limpiar archivos generados
 clean:
-	rm -f $(OBJS_SERVER) $(OBJS_PROXY) $(TARGET_SERVER) $(LIB_NAME)
+	rm -f $(OBJS_SERVER) $(OBJS_PROXY) $(TARGET_SERVER) $(TARGET_SERVER_LOG) $(LIB_NAME)
