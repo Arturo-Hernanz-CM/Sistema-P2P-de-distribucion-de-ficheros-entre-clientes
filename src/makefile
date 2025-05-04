@@ -16,7 +16,7 @@ UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Linux)
 	CFLAGS += -I/usr/include/tirpc 
-	CFLAGS += -ltr
+	CFLAGS += -lrt
 	LDLIBS += -ltirpc
 endif
 
