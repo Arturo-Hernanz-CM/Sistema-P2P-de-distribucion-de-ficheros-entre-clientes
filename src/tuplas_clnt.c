@@ -3,7 +3,7 @@
  * It was generated using rpcgen.
  */
 
-#include <memory.h>
+#include <memory.h> /* for memset */
 #include "tuplas.h"
 
 /* Default timeout can be changed using clnt_control() */
@@ -15,8 +15,12 @@ log_1(arg_log a,  CLIENT *clnt)
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, LOG, xdr_arg_log, &a, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call (clnt, LOG,
+		(xdrproc_t) xdr_arg_log, (caddr_t) &a,
+		(xdrproc_t) xdr_int, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
 		return (NULL);
+	}
 	return (&clnt_res);
 }
 
@@ -26,7 +30,11 @@ log_filename_1(arg_log_filename a,  CLIENT *clnt)
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, LOG_FILENAME, xdr_arg_log_filename, &a, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call (clnt, LOG_FILENAME,
+		(xdrproc_t) xdr_arg_log_filename, (caddr_t) &a,
+		(xdrproc_t) xdr_int, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
 		return (NULL);
+	}
 	return (&clnt_res);
 }

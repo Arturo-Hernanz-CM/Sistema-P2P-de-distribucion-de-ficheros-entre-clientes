@@ -33,6 +33,9 @@ claves.listcontent.restype = ctypes.c_int
 claves.get_file.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 claves.get_file.restype = ctypes.c_int
 
+claves.quit.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+claves.quit.restype = ctypes.c_int
+
 class client:
 
 
@@ -86,7 +89,6 @@ class client:
         username = user.encode("utf-8")
         fecha_hora = client.fechahora().encode("utf-8")
 
-        print(ip, port, username, fecha_hora)
         result = claves.register_user(username, ip, port, fecha_hora)
 
         if (result == 0) :
@@ -280,7 +282,7 @@ class client:
     # Funcion para salir
     @staticmethod
 
-    def quit():
+    def quit_client():
         if (client.username_conectado is None) :
 
             return client.RC.USER_ERROR
@@ -432,9 +434,8 @@ class client:
 
 
                     elif(line[0]=="QUIT") :
-
                         if (len(line) == 1) :
-                            client.quit()
+                            client.quit_client()
 
                             break
 

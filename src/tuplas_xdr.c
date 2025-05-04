@@ -6,29 +6,29 @@
 #include "tuplas.h"
 
 bool_t
-xdr_arg_log(XDR *xdrs, arg_log *objp)
+xdr_arg_log (XDR *xdrs, arg_log *objp)
 {
 
-	if (!xdr_string(xdrs, &objp->nombre, 256))
-		return (FALSE);
-	if (!xdr_string(xdrs, &objp->operacion, 15))
-		return (FALSE);
-	if (!xdr_string(xdrs, &objp->fecha_hora, 20))
-		return (FALSE);
-	return (TRUE);
+	 if (!xdr_string (xdrs, &objp->nombre, 256))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->operacion, 15))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->fecha_hora, 20))
+		 return FALSE;
+	return TRUE;
 }
 
 bool_t
-xdr_arg_log_filename(XDR *xdrs, arg_log_filename *objp)
+xdr_arg_log_filename (XDR *xdrs, arg_log_filename *objp)
 {
 
-	if (!xdr_string(xdrs, &objp->nombre, 256))
-		return (FALSE);
-	if (!xdr_string(xdrs, &objp->operacion, 15))
-		return (FALSE);
-	if (!xdr_string(xdrs, &objp->filename, 256))
-		return (FALSE);
-	if (!xdr_string(xdrs, &objp->fecha_hora, 20))
-		return (FALSE);
-	return (TRUE);
+	 if (!xdr_string (xdrs, &objp->nombre, 256))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->operacion, 15))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->filename, 256))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->fecha_hora, 20))
+		 return FALSE;
+	return TRUE;
 }

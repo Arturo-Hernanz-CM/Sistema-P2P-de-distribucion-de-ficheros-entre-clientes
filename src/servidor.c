@@ -13,8 +13,7 @@
 #include <arpa/inet.h>
 
 // Variables globales
-char *ip_servidor;
-char *puerto_servidor_char;
+char ip_servidor[INET_ADDRSTRLEN];
 Lista * base_datos = NULL;
 
 pthread_mutex_t mutex_mensaje;
@@ -547,6 +546,9 @@ int main(int argc, char **argv) {
 	socket_servidor.sin_family      = AF_INET;
     socket_servidor.sin_addr.s_addr = INADDR_ANY;
 	socket_servidor.sin_port        = htons(puerto_servidor);
+
+    inet_ntop(AF_INET, &(socket_servidor.sin_addr), ip_servidor, INET_ADDRSTRLEN);
+
 
 	// Asignar los datos del servidor al socket del servidor
 	err = bind(socket_servidor_descriptor, (const struct sockaddr *)&socket_servidor, sizeof(socket_servidor));

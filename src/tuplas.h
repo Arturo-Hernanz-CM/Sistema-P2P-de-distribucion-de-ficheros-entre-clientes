@@ -6,9 +6,12 @@
 #ifndef _TUPLAS_H_RPCGEN
 #define _TUPLAS_H_RPCGEN
 
-#define RPCGEN_VERSION	199506
-
 #include <rpc/rpc.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 struct arg_log {
@@ -17,14 +20,6 @@ struct arg_log {
 	char *fecha_hora;
 };
 typedef struct arg_log arg_log;
-#ifdef __cplusplus
-extern "C" bool_t xdr_arg_log(XDR *, arg_log*);
-#elif __STDC__
-extern  bool_t xdr_arg_log(XDR *, arg_log*);
-#else /* Old Style C */
-bool_t xdr_arg_log();
-#endif /* Old Style C */
-
 
 struct arg_log_filename {
 	char *nombre;
@@ -33,41 +28,43 @@ struct arg_log_filename {
 	char *fecha_hora;
 };
 typedef struct arg_log_filename arg_log_filename;
-#ifdef __cplusplus
-extern "C" bool_t xdr_arg_log_filename(XDR *, arg_log_filename*);
-#elif __STDC__
-extern  bool_t xdr_arg_log_filename(XDR *, arg_log_filename*);
-#else /* Old Style C */
-bool_t xdr_arg_log_filename();
-#endif /* Old Style C */
 
+#define TUPLAS 5850
+#define TUPLASVER 1
 
-#define TUPLAS ((rpc_uint)5850)
-#define TUPLASVER ((rpc_uint)1)
-
-#ifdef __cplusplus
-#define LOG ((rpc_uint)0)
-extern "C" int * log_1(arg_log , CLIENT *);
-extern "C" int * log_1_svc(arg_log , struct svc_req *);
-#define LOG_FILENAME ((rpc_uint)1)
-extern "C" int * log_filename_1(arg_log_filename , CLIENT *);
-extern "C" int * log_filename_1_svc(arg_log_filename , struct svc_req *);
-
-#elif __STDC__
-#define LOG ((rpc_uint)0)
+#if defined(__STDC__) || defined(__cplusplus)
+#define LOG 0
 extern  int * log_1(arg_log , CLIENT *);
 extern  int * log_1_svc(arg_log , struct svc_req *);
-#define LOG_FILENAME ((rpc_uint)1)
+#define LOG_FILENAME 1
 extern  int * log_filename_1(arg_log_filename , CLIENT *);
 extern  int * log_filename_1_svc(arg_log_filename , struct svc_req *);
+extern int tuplas_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* Old Style C */
-#define LOG ((rpc_uint)0)
+#else /* K&R C */
+#define LOG 0
 extern  int * log_1();
 extern  int * log_1_svc();
-#define LOG_FILENAME ((rpc_uint)1)
+#define LOG_FILENAME 1
 extern  int * log_filename_1();
 extern  int * log_filename_1_svc();
-#endif /* Old Style C */
+extern int tuplas_1_freeresult ();
+#endif /* K&R C */
+
+/* the xdr functions */
+
+#if defined(__STDC__) || defined(__cplusplus)
+extern  bool_t xdr_arg_log (XDR *, arg_log*);
+extern  bool_t xdr_arg_log_filename (XDR *, arg_log_filename*);
+
+#else /* K&R C */
+extern bool_t xdr_arg_log ();
+extern bool_t xdr_arg_log_filename ();
+
+#endif /* K&R C */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_TUPLAS_H_RPCGEN */

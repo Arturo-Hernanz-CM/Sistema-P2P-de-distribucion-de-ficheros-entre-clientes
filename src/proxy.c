@@ -429,16 +429,16 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
     // Variables
     int puerto_servidor;
     int error = 0;
-    if(peticion->operacion == 1 || peticion->operacion == 2){
+    if(peticion->operacion == 0 || peticion->operacion == 1){
         error = -2;
     }
-    else if(peticion->operacion == 3 || peticion->operacion == 4 || peticion->operacion == 7){
+    else if(peticion->operacion == 2 || peticion->operacion == 3 || peticion->operacion == 6){
         error = -3;
     }
-    else if(peticion->operacion == 5 || peticion->operacion == 6 || peticion->operacion == 8){
+    else if(peticion->operacion == 4 || peticion->operacion == 5 || peticion->operacion == 7){
         error = -4;
     }
-    else if(peticion->operacion == 9){
+    else if(peticion->operacion == 8){
         error = -1;
     }
     
