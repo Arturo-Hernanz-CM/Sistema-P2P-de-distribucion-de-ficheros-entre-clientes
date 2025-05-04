@@ -100,7 +100,7 @@ void recibir_socket(int *socket_cliente_descriptor){
     int socket_cliente_descriptor_local;
     Conexion conexion, conexion2;
     Peticion peticion_local = {0};
-    int respuesta;
+    int respuesta = 0;
     int32_t res;
     int32_t resp;
     char * user_ip_port = NULL;
@@ -122,14 +122,14 @@ void recibir_socket(int *socket_cliente_descriptor){
     if (recibir_peticion(socket_cliente_descriptor_local, &peticion_local)){
         perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al recibir la petición\n");
         close(socket_cliente_descriptor_local);
-        return -5;
+        respuesta = -5;
     }
 
     // Cliente para el servidor rcp
     CLIENT *cliente = clnt_create(ip_servidor, TUPLAS, TUPLASVER, "tcp");
     if(cliente == NULL){
         clnt_pcreateerror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al crear el cliente");
-        return -5;
+        respuesta = -5;
     }
 
     // Ejecutar la petición
@@ -141,14 +141,16 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "REGISTER";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_1(log, cliente);
+        rcp = *log_1(log, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al registrar el usuario en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        respuesta = register_user(peticion_local.username);
+        if (respuesta == 0){
+            respuesta = register_user(peticion_local.username);
+        }
         error = -2;
     }
     else if (peticion_local.operacion == 1) {   // Función unregister
@@ -159,14 +161,16 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "UNREGISTER";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_1(log, cliente);
+        rcp = *log_1(log, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al desregistrar el usuario en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        respuesta = unregister(peticion_local.username);
+        if(respuesta == 0){
+            respuesta = unregister(peticion_local.username);
+        }
         error = -2;
     }
     else if (peticion_local.operacion == 2) {   // Función connect
@@ -177,14 +181,16 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "CONNECT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_1(log, cliente);
+        rcp = *log_1(log, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al conectar el usuario en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        respuesta = connect_user(peticion_local.username, peticion_local.port_escucha, ip_cliente);
+        if(respuesta == 0){
+            respuesta = connect_user(peticion_local.username, peticion_local.port_escucha, ip_cliente);
+        }
         error = -3;
     }
     else if (peticion_local.operacion == 3) {   // Función disconnect
@@ -195,14 +201,16 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "DISCONNECT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_1(log, cliente);
+        rcp = *log_1(log, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al desconectar el usuario en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        respuesta = disconnect(peticion_local.username);
+        if(respuesta == 0){
+            respuesta = disconnect(peticion_local.username);
+        }
         error = -3;
     }
     else if (peticion_local.operacion == 4) {   // Función publish
@@ -214,14 +222,16 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_filename_1(log_filename, cliente);
+        rcp = *log_filename_1(log_filename, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al publicar el archivo en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        respuesta = publish(peticion_local.username, peticion_local.filename1, peticion_local.description);
+        if(respuesta == 0){
+            respuesta = publish(peticion_local.username, peticion_local.filename1, peticion_local.description);
+        }
         error = -4;
     }
     else if (peticion_local.operacion == 5) {   // Función delete
@@ -233,14 +243,16 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_filename_1(log_filename, cliente);
+        rcp = *log_filename_1(log_filename, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al eliminar el archivo en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        respuesta = delete(peticion_local.username, peticion_local.filename1);
+        if(respuesta == 0){
+            respuesta = delete(peticion_local.username, peticion_local.filename1);
+        }
         error = -4;
     }
     else if (peticion_local.operacion == 6){    // Función listusers
@@ -251,15 +263,17 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "LIST_USERS";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_1(log, cliente);
+        rcp = *log_1(log, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al listar los usuarios en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        conexion = is_connected(peticion_local.username);
-        respuesta = conexion.error;
+        if(respuesta == 0){
+            conexion = is_connected(peticion_local.username);
+            respuesta = conexion.error;
+        }
         error = -3;
     }
     else if(peticion_local.operacion == 7){     // Función listcontent
@@ -270,21 +284,24 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "LIST_CONTENT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_1(log, cliente);
+        rcp = *log_1(log, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al listar el contenido en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        conexion = is_connected(peticion_local.username);
-        conexion2 = is_connected(peticion_local.username2);
-        if(conexion2.error == -2){
-           respuesta = -3; 
+        if(respuesta == 0){
+            conexion = is_connected(peticion_local.username);
+            conexion2 = is_connected(peticion_local.username2);
+            if(conexion2.error == -2){
+            respuesta = -3; 
+            }
+            else{
+                respuesta = conexion.error;
+            }
         }
-        else{
-            respuesta = conexion.error;
-        }
+        
         error = -4;
     }
     else if(peticion_local.operacion == 8){     // Función getfile
@@ -296,33 +313,33 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = log_filename_1(log_filename, cliente);
+        rcp = *log_filename_1(log_filename, cliente);
         if(rcp == -1){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al obtener el archivo en el servidor rcp");
-            return -5;
+            respuesta = -5;
         }
 
         // Llamada al servidor
-        conexion = is_connected(peticion_local.username);
-        conexion2 = is_connected(peticion_local.username2);
-        if(conexion.error < 0){
-           respuesta = -1; 
-        }
-        else if(conexion2.error < 0){
-           respuesta = -1; 
-        }
-        else{
-            respuesta = 0;
-        }
+        if(respuesta == 0){
+            conexion = is_connected(peticion_local.username);
+            conexion2 = is_connected(peticion_local.username2);
+            if(conexion.error < 0){
+            respuesta = -1; 
+            }
+            else if(conexion2.error < 0){
+            respuesta = -1; 
+            }
+            else{
+                respuesta = 0;
+            }
 
-        if(respuesta > 0){
-            Published published = is_published(peticion_local.filename1, conexion.exist.nodo_usuario->publicaciones);
-            if(published.error < 0){
-                respuesta = -1;
+            if(respuesta > 0){
+                Published published = is_published(peticion_local.filename1, conexion.exist.nodo_usuario->publicaciones);
+                if(published.error < 0){
+                    respuesta = -1;
+                }
             }
         }
-        
-
         error = -4;
     }
     else {

@@ -4,6 +4,11 @@ CC = gcc
 # Flags de compilación
 CFLAGS = -Wall -g -fPIC -pthread -DRPC_SVC_FG
 
+# Librerías para el linker
+LDLIBS = -lpthread -ldl
+
+CPPFLAGS += -D_REENTRANT
+
 # Detección del sistema
 UNAME_S := $(shell uname -s)
 
@@ -16,10 +21,10 @@ ifeq ($(UNAME_S),Linux)
 endif
 
 
-ifeq ($(UNAME_S),Darwin)
-	CFLAGS += -I/opt/homebrew/Cellar/libtirpc/1.3.6/include/tirpc
-	LDLIBS += -L/opt/homebrew/Cellar/libtirpc/1.3.6/lib -ltirpc
-endif
+#ifeq ($(UNAME_S),Darwin)
+#	CFLAGS += -I/opt/homebrew/Cellar/libtirpc/1.3.6/include/tirpc
+#	LDLIBS += -L/opt/homebrew/Cellar/libtirpc/1.3.6/lib -ltirpc
+#endif
 
 
 # Archivos fuente
@@ -40,15 +45,15 @@ TARGET_SERVER = servidor
 TARGET_SERVER_LOG = servidor_log
 
 # Regla por defecto: compilar todo
-all: $(TARGET_SERVER) $(LIB_NAME)
+all: $(TARGET_SERVER) $(TARGET_SERVER_LOG) $(LIB_NAME)
 
 # Compilar el servidor
 $(TARGET_SERVER): $(OBJS_SERVER)
-	$(CC) $(CFLAGS) -o $(TARGET_SERVER) $(OBJS_SERVER)
+	$(CC) $(CFLAGS) -o $(TARGET_SERVER) $(OBJS_SERVER) $(LDLIBS)
 
 # Compilar el servidor con logs
 $(TARGET_SERVER_LOG): $(OBJS_SERVER_LOG)
-	$(CC) $(CFLAGS) -o $(TARGET_SERVER_LOG) $(OBJS_SERVER_LOG)
+	$(CC) $(CFLAGS) -o $(TARGET_SERVER_LOG) $(OBJS_SERVER_LOG) $(LDLIBS)
 
 # Crear la librería compartida
 $(LIB_NAME): $(OBJS_PROXY)
