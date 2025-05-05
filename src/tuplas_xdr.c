@@ -8,6 +8,7 @@
 bool_t
 xdr_arg_log (XDR *xdrs, arg_log *objp)
 {
+	register int32_t *buf;
 
 	 if (!xdr_string (xdrs, &objp->nombre, 256))
 		 return FALSE;
@@ -21,6 +22,7 @@ xdr_arg_log (XDR *xdrs, arg_log *objp)
 bool_t
 xdr_arg_log_filename (XDR *xdrs, arg_log_filename *objp)
 {
+	register int32_t *buf;
 
 	 if (!xdr_string (xdrs, &objp->nombre, 256))
 		 return FALSE;

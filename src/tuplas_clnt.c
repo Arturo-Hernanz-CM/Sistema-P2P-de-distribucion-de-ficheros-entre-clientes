@@ -9,32 +9,20 @@
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
-int *
-log_1(arg_log a,  CLIENT *clnt)
+enum clnt_stat 
+log_1(arg_log a, int *clnt_res,  CLIENT *clnt)
 {
-	static int clnt_res;
-
-	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, LOG,
+	return (clnt_call(clnt, LOG,
 		(xdrproc_t) xdr_arg_log, (caddr_t) &a,
-		(xdrproc_t) xdr_int, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
-		return (NULL);
-	}
-	return (&clnt_res);
+		(xdrproc_t) xdr_int, (caddr_t) clnt_res,
+		TIMEOUT));
 }
 
-int *
-log_filename_1(arg_log_filename a,  CLIENT *clnt)
+enum clnt_stat 
+log_filename_1(arg_log_filename a, int *clnt_res,  CLIENT *clnt)
 {
-	static int clnt_res;
-
-	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, LOG_FILENAME,
+	return (clnt_call(clnt, LOG_FILENAME,
 		(xdrproc_t) xdr_arg_log_filename, (caddr_t) &a,
-		(xdrproc_t) xdr_int, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
-		return (NULL);
-	}
-	return (&clnt_res);
+		(xdrproc_t) xdr_int, (caddr_t) clnt_res,
+		TIMEOUT));
 }

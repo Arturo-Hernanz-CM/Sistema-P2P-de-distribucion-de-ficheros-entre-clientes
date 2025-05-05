@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -23,6 +24,7 @@ int ocupado = 0;
 
 int puerto_cliente;
 char ip_cliente[INET_ADDRSTRLEN];
+
 
 // Funciones
 
@@ -566,12 +568,25 @@ int main(int argc, char **argv) {
 
     // Peticiones
 	pthread_attr_setdetachstate(&thread_att, PTHREAD_CREATE_DETACHED);      // threads independientes
-
+    
     // Print inicial
-    char ip_str[INET_ADDRSTRLEN];
 
-    inet_ntop(AF_INET, &socket_servidor.sin_addr, ip_str, sizeof(ip_str));
-    printf("s> init server %s:%d\n", ip_str, ntohs(socket_servidor.sin_port));
+    char hostname[NI_MAXHOST];
+    gethostname(hostname, NI_MAXHOST);
+    struct addrinfo hints, *res;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    
+    if (getaddrinfo(hostname, NULL, &hints, &res) == 0) {
+        struct sockaddr_in *addr = (struct sockaddr_in *)res->ai_addr;
+        inet_ntop(AF_INET, &(addr->sin_addr), ip_servidor, INET_ADDRSTRLEN);
+        freeaddrinfo(res);
+    } else {
+        strcpy(ip_servidor, "Unknown");
+    }
+
+    printf("s> init server %s:%d\n", ip_servidor, ntohs(socket_servidor.sin_port));
 
     // Recibir conexiones
     while(1) {

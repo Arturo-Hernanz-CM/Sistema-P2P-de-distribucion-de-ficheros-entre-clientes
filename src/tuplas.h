@@ -8,6 +8,7 @@
 
 #include <rpc/rpc.h>
 
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,20 +35,20 @@ typedef struct arg_log_filename arg_log_filename;
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define LOG 0
-extern  int * log_1(arg_log , CLIENT *);
-extern  int * log_1_svc(arg_log , struct svc_req *);
+extern  enum clnt_stat log_1(arg_log , int *, CLIENT *);
+extern  bool_t log_1_svc(arg_log , int *, struct svc_req *);
 #define LOG_FILENAME 1
-extern  int * log_filename_1(arg_log_filename , CLIENT *);
-extern  int * log_filename_1_svc(arg_log_filename , struct svc_req *);
+extern  enum clnt_stat log_filename_1(arg_log_filename , int *, CLIENT *);
+extern  bool_t log_filename_1_svc(arg_log_filename , int *, struct svc_req *);
 extern int tuplas_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define LOG 0
-extern  int * log_1();
-extern  int * log_1_svc();
+extern  enum clnt_stat log_1();
+extern  bool_t log_1_svc();
 #define LOG_FILENAME 1
-extern  int * log_filename_1();
-extern  int * log_filename_1_svc();
+extern  enum clnt_stat log_filename_1();
+extern  bool_t log_filename_1_svc();
 extern int tuplas_1_freeresult ();
 #endif /* K&R C */
 

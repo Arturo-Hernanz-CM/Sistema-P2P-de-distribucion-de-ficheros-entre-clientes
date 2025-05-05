@@ -16,16 +16,16 @@
 #define SIG_PF void(*)(int)
 #endif
 
-static int *
-_log_1 (arg_log  *argp, struct svc_req *rqstp)
+int
+_log_1 (arg_log  *argp, void *result, struct svc_req *rqstp)
 {
-	return (log_1_svc(*argp, rqstp));
+	return (log_1_svc(*argp, result, rqstp));
 }
 
-static int *
-_log_filename_1 (arg_log_filename  *argp, struct svc_req *rqstp)
+int
+_log_filename_1 (arg_log_filename  *argp, void *result, struct svc_req *rqstp)
 {
-	return (log_filename_1_svc(*argp, rqstp));
+	return (log_filename_1_svc(*argp, result, rqstp));
 }
 
 static void
@@ -35,21 +35,25 @@ tuplas_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		arg_log log_1_arg;
 		arg_log_filename log_filename_1_arg;
 	} argument;
-	char *result;
+	union {
+		int log_1_res;
+		int log_filename_1_res;
+	} result;
+	bool_t retval;
 	xdrproc_t _xdr_argument, _xdr_result;
-	char *(*local)(char *, struct svc_req *);
+	bool_t (*local)(char *, void *, struct svc_req *);
 
 	switch (rqstp->rq_proc) {
 	case LOG:
 		_xdr_argument = (xdrproc_t) xdr_arg_log;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) _log_1;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_log_1;
 		break;
 
 	case LOG_FILENAME:
 		_xdr_argument = (xdrproc_t) xdr_arg_log_filename;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) _log_filename_1;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_log_filename_1;
 		break;
 
 	default:
@@ -61,14 +65,17 @@ tuplas_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		svcerr_decode (transp);
 		return;
 	}
-	result = (*local)((char *)&argument, rqstp);
-	if (result != NULL && !svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
+	retval = (bool_t) (*local)((char *)&argument, (void *)&result, rqstp);
+	if (retval > 0 && !svc_sendreply(transp, (xdrproc_t) _xdr_result, (char *)&result)) {
 		svcerr_systemerr (transp);
 	}
 	if (!svc_freeargs (transp, (xdrproc_t) _xdr_argument, (caddr_t) &argument)) {
 		fprintf (stderr, "%s", "unable to free arguments");
 		exit (1);
 	}
+	if (!tuplas_1_freeresult (transp, _xdr_result, (caddr_t) &result))
+		fprintf (stderr, "%s", "unable to free results");
+
 	return;
 }
 
