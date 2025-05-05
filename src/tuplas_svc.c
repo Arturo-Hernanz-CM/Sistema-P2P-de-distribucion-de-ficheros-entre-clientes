@@ -28,6 +28,14 @@ _log_filename_1 (arg_log_filename  *argp, void *result, struct svc_req *rqstp)
 	return (log_filename_1_svc(*argp, result, rqstp));
 }
 
+int
+tuplas_1_freeresult(SVCXPRT *transp, xdrproc_t xdr_result, caddr_t result)
+{
+	if (xdr_result == NULL || result == NULL) return 1;
+	xdr_free(xdr_result, result);
+	return 1;
+}
+
 static void
 tuplas_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {

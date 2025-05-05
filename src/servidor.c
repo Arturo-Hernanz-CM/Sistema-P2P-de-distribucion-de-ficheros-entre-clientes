@@ -142,9 +142,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "REGISTER";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_1(log, cliente);
-        if(rcp == -1){
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al registrar el usuario en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -162,9 +163,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "UNREGISTER";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_1(log, cliente);
-        if(rcp == -1){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al desregistrar el usuario en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al borrar el usuario en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -182,9 +184,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "CONNECT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_1(log, cliente);
-        if(rcp == -1){
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al conectar el usuario en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -200,11 +203,11 @@ void recibir_socket(int *socket_cliente_descriptor){
         // LLamada RCP
         log.nombre = peticion_local.username;
         log.operacion = "DISCONNECT";
-        log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_1(log, cliente);
-        if(rcp == -1){
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al desconectar el usuario en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -223,9 +226,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_filename_1(log_filename, cliente);
-        if(rcp == -1){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al publicar el archivo en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al publicar el fichero en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -244,9 +248,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_filename_1(log_filename, cliente);
-        if(rcp == -1){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al eliminar el archivo en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al borrar el fichero en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -264,9 +269,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "LIST_USERS";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_1(log, cliente);
-        if(rcp == -1){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al listar los usuarios en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al mostrar los usuarios en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -285,9 +291,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log.operacion = "LIST_CONTENT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_1(log, cliente);
-        if(rcp == -1){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al listar el contenido en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al mostrar el contenido del usuario en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 
@@ -314,9 +321,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        rcp = *log_filename_1(log_filename, cliente);
-        if(rcp == -1){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al obtener el archivo en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        if(stat != RPC_SUCCESS || rcp < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al solicitar el fichero del usuario en el servidor rcp");
+            clnt_destroy(cliente);
             respuesta = -5;
         }
 

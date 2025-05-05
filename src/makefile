@@ -21,10 +21,10 @@ ifeq ($(UNAME_S),Linux)
 endif
 
 
-#ifeq ($(UNAME_S),Darwin)
-#	CFLAGS += -I/opt/homebrew/Cellar/libtirpc/1.3.6/include/tirpc
-#	LDLIBS += -L/opt/homebrew/Cellar/libtirpc/1.3.6/lib -ltirpc
-#endif
+ifeq ($(UNAME_S),Darwin)
+	CFLAGS += -arch arm64
+	LDLIBS += -arch arm64
+endif
 
 
 # Archivos fuente

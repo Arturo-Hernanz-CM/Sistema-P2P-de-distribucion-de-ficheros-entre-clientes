@@ -3,20 +3,28 @@
 #include <stdlib.h>
 #include <rpc/pmap_clnt.h>
 
-bool_t log_1_svc(arg_log argp, struct svc_req *rqstp)
+bool_t log_1_svc(arg_log argp,int *result, struct svc_req *rqstp)
 {
-    static int result = 0;
+    static int resultado = 0;
     char string[291];
-    sprintf(string, "%s %s %s", argp.nombre, argp.operacion, argp.fecha_hora);
+    resultado = sprintf(string, "%s %s %s", argp.nombre, argp.operacion, argp.fecha_hora);
+    *result = resultado;
+    if(resultado <= 0){
+        return FALSE;
+    };
     printf("%s\n", string);
-    return &result;
+    return TRUE;
 }
 
-bool_t log_filename_1_svc(arg_log_filename argp, struct svc_req *rqstp)
+bool_t log_filename_1_svc(arg_log_filename argp, int* result, struct svc_req *rqstp)
 {
-    static int result = 0;
+    static int resultado = 0;
     char string[547];
-    sprintf(string, "%s %s %s %s", argp.nombre, argp.operacion, argp.filename, argp.fecha_hora);
+    resultado = sprintf(string, "%s %s %s %s", argp.nombre, argp.operacion, argp.filename, argp.fecha_hora);
+    *result = resultado;
+    if(resultado <= 0){
+        return FALSE;
+    }
     printf("%s\n", string);
-    return &result;
+    return FALSE;
 }
