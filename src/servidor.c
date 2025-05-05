@@ -25,6 +25,10 @@ int ocupado = 0;
 int puerto_cliente;
 char ip_cliente[INET_ADDRSTRLEN];
 
+char * ip_rpc;
+
+CLIENT *cliente = NULL;
+
 
 // Funciones
 
@@ -127,7 +131,7 @@ void recibir_socket(int *socket_cliente_descriptor){
     }
 
     // Cliente para el servidor rcp
-    CLIENT *cliente = clnt_create(ip_servidor, TUPLAS, TUPLASVER, "tcp");
+    cliente = clnt_create(ip_rpc, TUPLAS, TUPLASVER, "tcp");
     if(cliente == NULL){
         clnt_pcreateerror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al crear el cliente");
         respuesta = -5;
@@ -203,6 +207,7 @@ void recibir_socket(int *socket_cliente_descriptor){
         // LLamada RCP
         log.nombre = peticion_local.username;
         log.operacion = "DISCONNECT";
+        log.fecha_hora = peticion_local.fecha_hora;
 
         enum clnt_stat stat = log_1(log, &rcp, cliente);
         if(stat != RPC_SUCCESS || rcp < 0){
@@ -557,8 +562,6 @@ int main(int argc, char **argv) {
     socket_servidor.sin_addr.s_addr = INADDR_ANY;
 	socket_servidor.sin_port        = htons(puerto_servidor);
 
-    inet_ntop(AF_INET, &(socket_servidor.sin_addr), ip_servidor, INET_ADDRSTRLEN);
-
 
 	// Asignar los datos del servidor al socket del servidor
 	err = bind(socket_servidor_descriptor, (const struct sockaddr *)&socket_servidor, sizeof(socket_servidor));
@@ -596,6 +599,9 @@ int main(int argc, char **argv) {
 
     printf("s> init server %s:%d\n", ip_servidor, ntohs(socket_servidor.sin_port));
 
+    // Asignar valor a la ip del rcp
+    ip_rpc = getenv("LOG_RCP_IP");
+
     // Recibir conexiones
     while(1) {
         fflush(stdout);
@@ -628,5 +634,6 @@ int main(int argc, char **argv) {
 
     // Cerrar el socket
     close(socket_servidor_descriptor);
+    clnt_destroy(cliente);
     return 0;
 }

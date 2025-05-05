@@ -685,6 +685,7 @@ int unregister(char* username, char * fecha_hora) {
     }
     if(hilo == 1){
         hilo_activo = 0;
+        shutdown(socket_escucha_descriptor, SHUT_RDWR);  // Interrumpe accept() del hilo de escuchas
         close(socket_escucha_descriptor);
         pthread_join(thread_cliente, NULL);
         hilo = 0;
