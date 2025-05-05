@@ -226,7 +226,7 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        enum clnt_stat stat = log_filename_1(log_filename, &rcp, cliente);
         if(stat != RPC_SUCCESS || rcp < 0){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al publicar el fichero en el servidor rcp");
             clnt_destroy(cliente);
@@ -248,7 +248,7 @@ void recibir_socket(int *socket_cliente_descriptor){
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        enum clnt_stat stat = log_filename_1(log_filename, &rcp, cliente);
         if(stat != RPC_SUCCESS || rcp < 0){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al borrar el fichero en el servidor rcp");
             clnt_destroy(cliente);
