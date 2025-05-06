@@ -26,5 +26,5 @@ bool_t log_filename_1_svc(arg_log_filename argp, int* result, struct svc_req *rq
         return FALSE;
     }
     printf("%s\n", string);
-    return FALSE;
+    return TRUE;
 }
