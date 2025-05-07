@@ -289,10 +289,10 @@ void recibir_socket(int *socket_cliente_descriptor){
         error = -3;
     }
     else if(peticion_local.operacion == 7){     // Función listcontent
-        printf("\ns> OPERATION LIST_CONTENT FROM %s\n", peticion_local.username);
+        printf("\ns> OPERATION LIST_CONTENT FROM %s\n", peticion_local.username2);
 
         // Llamada RCP
-        log.nombre = peticion_local.username;
+        log.nombre = peticion_local.username2;
         log.operacion = "LIST_CONTENT";
         log.fecha_hora = peticion_local.fecha_hora;
 
@@ -318,15 +318,15 @@ void recibir_socket(int *socket_cliente_descriptor){
         error = -4;
     }
     else if(peticion_local.operacion == 8){     // Función getfile
-        printf("\ns> OPERATION GET_VALUE FROM %s\n", peticion_local.username);
+        printf("\ns> OPERATION GET_FILE FROM %s\n", peticion_local.username2);
 
         // Llamada RCP
-        log_filename.nombre = peticion_local.username;
-        log_filename.operacion = "GET_VALUE";
+        log_filename.nombre = peticion_local.username2;
+        log_filename.operacion = "GET_FILE";
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
+        enum clnt_stat stat = log_filename_1(log_filename, &rcp, cliente);
         if(stat != RPC_SUCCESS || rcp < 0){
             perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al solicitar el fichero del usuario en el servidor rcp");
             clnt_destroy(cliente);
