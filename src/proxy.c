@@ -655,13 +655,11 @@ int register_user(char* username, char* ip_s, char* port_s, char * fecha_hora) {
     if(resultado == -1){
         perror("USERNAME IN USE\n\n");
         free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     else if(resultado <= -2){
         perror("REGISTER FAIL\n\n");
         free(ip_servidor);
-        free(puerto_servidor_char);
         return -1;
     }
     printf("REGISTER OK\n\n");

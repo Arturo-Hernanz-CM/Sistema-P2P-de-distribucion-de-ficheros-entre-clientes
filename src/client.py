@@ -195,9 +195,6 @@ class client:
     @staticmethod
 
     def  delete(fileName) :
-        if (client.username_conectado is None) :
-
-            return client.RC.USER_ERROR
 
         filename = fileName.encode("utf-8")
         fecha_hora = client.fechahora().encode("utf-8")
@@ -217,10 +214,6 @@ class client:
     @staticmethod
 
     def  listusers() :
-
-        if (client.username_conectado is None) :
-
-            return client.RC.USER_ERROR
         
         fecha_hora = client.fechahora().encode("utf-8")
         
@@ -258,10 +251,6 @@ class client:
     @staticmethod
 
     def  getfile(user,  remote_FileName,  local_FileName) :
-        if (client.username_conectado is None) :
-
-            return client.RC.USER_ERROR
-
 
         username = user.encode("utf-8")
         remote_filename = remote_FileName.encode("utf-8")
