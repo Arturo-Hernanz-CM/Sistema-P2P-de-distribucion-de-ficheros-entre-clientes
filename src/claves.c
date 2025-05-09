@@ -27,6 +27,8 @@ int register_user(char* username){
     exist = is_registered(username);
     if(exist.error == 0){
         perror("\ns> ERROR:\nFile: claves.c\nFunction: register_user\nError: El usuario ya existe");
+        pthread_mutex_unlock(&mutex_funcion);
+        bloqueado = 0;
         return -1;
     }
 

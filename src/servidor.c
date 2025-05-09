@@ -112,7 +112,7 @@ void recibir_socket(int *socket_cliente_descriptor){
     Nodo * nodo = NULL;
     Publicacion * publicacion = NULL;
     int error = 0;
-    int rcp;
+    int rpc;
     arg_log log = {0};
     arg_log_filename log_filename = {0};
 
@@ -130,7 +130,7 @@ void recibir_socket(int *socket_cliente_descriptor){
         respuesta = -5;
     }
 
-    // Cliente para el servidor rcp
+    // Cliente para el servidor rpc
     cliente = clnt_create(ip_rpc, TUPLAS, TUPLASVER, "tcp");
     if(cliente == NULL){
         clnt_pcreateerror("ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al crear el cliente");
@@ -141,14 +141,14 @@ void recibir_socket(int *socket_cliente_descriptor){
     if (peticion_local.operacion == 0) {    // Función register
         printf("\ns> OPERATION REGISTER FROM %s\n", peticion_local.username);
 
-        // LLamada RCP
+        // LLamada rpc
         log.nombre = peticion_local.username;
         log.operacion = "REGISTER";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al registrar el usuario en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al registrar el usuario en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -162,14 +162,14 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if (peticion_local.operacion == 1) {   // Función unregister
         printf("\ns> OPERATION UNREGISTER FROM %s\n", peticion_local.username);
 
-        // LLamada RCP
+        // LLamada rpc
         log.nombre = peticion_local.username;
         log.operacion = "UNREGISTER";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al borrar el usuario en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al borrar el usuario en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -183,14 +183,14 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if (peticion_local.operacion == 2) {   // Función connect
         printf("\ns> OPERATION CONNECT FROM %s\n", peticion_local.username);
 
-        // LLamada RCP
+        // LLamada rpc
         log.nombre = peticion_local.username;
         log.operacion = "CONNECT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al conectar el usuario en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al conectar el usuario en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -204,14 +204,14 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if (peticion_local.operacion == 3) {   // Función disconnect
         printf("\ns> OPERATION DISCONNECT FROM %s\n", peticion_local.username);
 
-        // LLamada RCP
+        // LLamada rpc
         log.nombre = peticion_local.username;
         log.operacion = "DISCONNECT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al desconectar el usuario en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al desconectar el usuario en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -225,15 +225,15 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if (peticion_local.operacion == 4) {   // Función publish
         printf("\ns> OPERATION PUBLISH FROM %s\n", peticion_local.username);
 
-        // LLamada RCP
+        // LLamada rpc
         log_filename.nombre = peticion_local.username;
         log_filename.operacion = "PUBLISH";
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_filename_1(log_filename, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al publicar el fichero en el servidor rcp");
+        enum clnt_stat stat = log_filename_1(log_filename, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al publicar el fichero en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -247,15 +247,15 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if (peticion_local.operacion == 5) {   // Función delete
         printf("\ns> OPERATION DELETE FROM %s\n", peticion_local.username);
 
-        // LLamada RCP
+        // LLamada rpc
         log_filename.nombre = peticion_local.username;
         log_filename.operacion = "DELETE";
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_filename_1(log_filename, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al borrar el fichero en el servidor rcp");
+        enum clnt_stat stat = log_filename_1(log_filename, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al borrar el fichero en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -269,14 +269,14 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if (peticion_local.operacion == 6){    // Función listusers
         printf("\ns> OPERATION LIST_USERS FROM %s\n", peticion_local.username);
 
-        // Llamada RCP
+        // Llamada rpc
         log.nombre = peticion_local.username;
         log.operacion = "LIST_USERS";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al mostrar los usuarios en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al mostrar los usuarios en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -291,14 +291,14 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if(peticion_local.operacion == 7){     // Función listcontent
         printf("\ns> OPERATION LIST_CONTENT FROM %s\n", peticion_local.username2);
 
-        // Llamada RCP
+        // Llamada rpc
         log.nombre = peticion_local.username2;
         log.operacion = "LIST_CONTENT";
         log.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_1(log, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al mostrar el contenido del usuario en el servidor rcp");
+        enum clnt_stat stat = log_1(log, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al mostrar el contenido del usuario en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -320,15 +320,15 @@ void recibir_socket(int *socket_cliente_descriptor){
     else if(peticion_local.operacion == 8){     // Función getfile
         printf("\ns> OPERATION GET_FILE FROM %s\n", peticion_local.username2);
 
-        // Llamada RCP
+        // Llamada rpc
         log_filename.nombre = peticion_local.username2;
         log_filename.operacion = "GET_FILE";
         log_filename.filename = peticion_local.filename1;
         log_filename.fecha_hora = peticion_local.fecha_hora;
 
-        enum clnt_stat stat = log_filename_1(log_filename, &rcp, cliente);
-        if(stat != RPC_SUCCESS || rcp < 0){
-            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al solicitar el fichero del usuario en el servidor rcp");
+        enum clnt_stat stat = log_filename_1(log_filename, &rpc, cliente);
+        if(stat != RPC_SUCCESS || rpc < 0){
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al solicitar el fichero del usuario en el servidor rpc");
             clnt_destroy(cliente);
             respuesta = -5;
         }
@@ -594,13 +594,13 @@ int main(int argc, char **argv) {
         inet_ntop(AF_INET, &(addr->sin_addr), ip_servidor, INET_ADDRSTRLEN);
         freeaddrinfo(res);
     } else {
-        strcpy(ip_servidor, "Unknown");
+        strpcy(ip_servidor, "Unknown");
     }
 
     printf("s> init server %s:%d\n", ip_servidor, ntohs(socket_servidor.sin_port));
 
-    // Asignar valor a la ip del rcp
-    ip_rpc = getenv("LOG_RCP_IP");
+    // Asignar valor a la ip del rpc
+    ip_rpc = getenv("LOG_rpc_IP");
 
     // Recibir conexiones
     while(1) {
