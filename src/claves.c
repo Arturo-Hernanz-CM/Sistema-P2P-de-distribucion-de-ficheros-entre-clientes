@@ -266,6 +266,10 @@ int publish(char * username_publisher, char* file_name, char* descripcion){
         publicaciones->inicio = publicacion;
         publicaciones->final = publicacion;
         publicaciones->size = 1;
+
+        publicacion->anterior = NULL;
+        publicacion->siguiente = NULL;
+        publicacion->index = 0;
         conexion.exist.nodo_usuario->publicaciones = publicaciones;
     }
     else{
@@ -337,6 +341,7 @@ int delete(char * username_solicitante, char * file_name){
         published.publicacion->siguiente->index = published.publicacion->index;
     }
     conexion.exist.nodo_usuario->publicaciones->size--;
+
     free(published.publicacion);
 
     printf("\ns> Fichero borrado.\n");
@@ -450,13 +455,6 @@ Conexion is_connected(char * username){
 Published is_published(char * file_name, Lista_publicaciones * publicaciones){
     Published publicacion;
 
-    publicacion.publicacion = malloc(sizeof(Publicacion));
-    if(publicacion.publicacion == NULL){
-        perror("\ns> ERROR:\nFile: claves.c\nFunction: is_published\nError: No se ha podido reservar memoria");
-        publicacion.error = -1;
-        return publicacion;
-    }
-
     if (bloqueado == 0){
         pthread_mutex_lock(&mutex_funcion);
     }
@@ -478,7 +476,7 @@ Published is_published(char * file_name, Lista_publicaciones * publicaciones){
                 pthread_mutex_unlock(&mutex_funcion);
             }
             publicacion.error = 0;
-            memcpy(publicacion.publicacion, publicacion_actual, sizeof(Publicacion));
+            publicacion.publicacion = publicacion_actual;
             return publicacion;
         }
         else{

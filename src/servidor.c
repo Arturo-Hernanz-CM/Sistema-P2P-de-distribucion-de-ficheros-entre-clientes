@@ -441,7 +441,14 @@ void recibir_socket(int *socket_cliente_descriptor){
             if(nodo->publicaciones == NULL){
                 resp = 0;
             }
-            resp = nodo->publicaciones->size;
+
+            if(nodo->publicaciones != NULL){
+                resp = nodo->publicaciones->size;
+            }
+            else{
+                resp = 0;
+            }
+            
             int32_t resp3 = htonl(resp);
             int32_t tot_size;
             
