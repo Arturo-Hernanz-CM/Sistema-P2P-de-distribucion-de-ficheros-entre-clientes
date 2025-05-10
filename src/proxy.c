@@ -430,16 +430,16 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
     int puerto_servidor;
     int error = 0;
     if(peticion->operacion == 0 || peticion->operacion == 1){
-        error = -2;
+        error = 2;
     }
     else if(peticion->operacion == 2 || peticion->operacion == 3 || peticion->operacion == 6){
-        error = -3;
+        error = 3;
     }
     else if(peticion->operacion == 4 || peticion->operacion == 5 || peticion->operacion == 7){
-        error = -4;
+        error = 4;
     }
     else if(peticion->operacion == 8){
-        error = -1;
+        error = 1;
     }
     
     // Comprobacion de las variables
@@ -503,7 +503,19 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
     // Recibir una lista de informacion (list_users y list_content)
     if(peticion->operacion == 6 || peticion->operacion == 7){
         int fin_emit;
-        int32_t fin_emit_, tot_size;
+        int32_t fin_emit_, tot_size, respuesta__;
+        if(recvMessage(socket_cliente_descriptor, (char *) &respuesta__, sizeof(respuesta__)) == -1) {
+            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
+            close(socket_cliente_descriptor);
+            return error;
+        }
+
+        int answer = ntohl(respuesta__);
+
+        if(answer != 0){
+            return answer;
+        }
+        
         if(recvMessage(socket_cliente_descriptor, (char *) &fin_emit_, sizeof(fin_emit_)) == -1) {
             perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
             close(socket_cliente_descriptor);
@@ -559,8 +571,21 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
             close(socket_cliente_descriptor);
             return error;
         }
+        int res_ = ntohl(res);
 
-        int puerto = ntohl(res);
+        if(res_ != 0){
+            return res_;
+        }
+
+        int32_t port;
+
+        if(recvMessage(socket_cliente_descriptor, (char *) &port, sizeof(int32_t)) == -1) {
+            perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: No se puede recibir la respuesta");
+            close(socket_cliente_descriptor);
+            return error;
+        }
+
+        int puerto = ntohl(port);
         if(puerto < 0){
             return error;
         }
@@ -653,12 +678,12 @@ int register_user(char* username, char* ip_s, char* port_s, char * fecha_hora) {
     peticion.operacion = 0;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
-        perror("USERNAME IN USE\n\n");
+    if(resultado == 1){
+        perror("REGISTER FAIL, USERNAME IN USE\n\n");
         free(ip_servidor);
         return -1;
     }
-    else if(resultado <= -2){
+    else if(resultado >= 2){
         perror("REGISTER FAIL\n\n");
         free(ip_servidor);
         return -1;
@@ -674,11 +699,11 @@ int unregister(char* username, char * fecha_hora) {
     peticion.operacion = 1;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
-        perror("USER DOES NOT EXIST\n\n");
+    if(resultado == 1){
+        perror("UNREGISTER FAIL, USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado <= -2){
+    else if(resultado >= 2){
         perror("UNREGISTER FAIL\n\n");
         return -1;
     }
@@ -702,15 +727,15 @@ int connect_user(char* username, char * fecha_hora) {
     peticion.port_escucha = puerto_escucha;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
+    if(resultado == 1){
         perror("CONNECT FAIL, USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado == 2){
         perror("USER ALREADY CONNECTED\n\n");
         return -1;
     }
-    else if(resultado <= -3){
+    else if(resultado >= 3){
         perror("CONNECT FAIL\n\n");
         return -1;
     }
@@ -726,15 +751,15 @@ int disconnect(char* username, char * fecha_hora) {
     peticion.operacion = 3;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
+    if(resultado == 1){
         perror("DISCONNECT FAIL, USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado == 2){
         perror("DISCONNECT FAIL, USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado <= -3){
+    else if(resultado >= 3){
         perror("DISCONNECT FAIL\n\n");
         return -1;
     }
@@ -752,19 +777,19 @@ int publish(char * username_publisher, char* file_name, char* descripcion, char 
     peticion.operacion = 4;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
+    if(resultado == 1){
         perror("PUBLISH FAIL, USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado == 2){
         perror("PUBLISH FAIL, USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado == -3){
+    else if(resultado == 3){
         perror("PUBLISH FAIL, CONTENT ALREADY PUBLISHED\n\n");
         return -1;
     }
-    else if(resultado <= -4){
+    else if(resultado >= 4){
         perror("PUBLISH FAIL\n\n");
         return -1;
     }
@@ -781,19 +806,19 @@ int delete(char * username_solicitante, char * file_name, char * fecha_hora) {
     peticion.operacion = 5;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
+    if(resultado == 1){
         perror("DELETE FAIL, USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado == 2){
         perror("DELETE FAIL, USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado == -3){
+    else if(resultado == 3){
         perror("DELETE FAIL, CONTENT NOT PUBLISHED\n\n");
         return -1;
     }
-    else if(resultado <= -4){
+    else if(resultado >= 4){
         perror("DELETE FAIL\n\n");
         return -1;
     }
@@ -808,15 +833,15 @@ int listusers(char * username, char * fecha_hora) {
     peticion.operacion = 6;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
+    if(resultado == 1){
         perror("LISTUSERS FAIL, USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado == 2){
         perror("LISTUSERS FAIL, USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado <= -3){
+    else if(resultado >= 3){
         perror("LISTUSERS FAIL\n\n");
         return -1;
     }
@@ -832,19 +857,19 @@ int listcontent(char * username, char * username_solicitante, char * fecha_hora)
     peticion.operacion = 7;
 
     int resultado = comunicacion_servidor(&peticion, NULL, NULL);
-    if(resultado == -1){
+    if(resultado == 1){
         perror("LISTCONTENT FAIL, USER DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado == -2){
+    else if(resultado == 2){
         perror("LISTCONTENT FAIL, USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado == -3){
+    else if(resultado == 3){
         perror("LISTCONTENT FAIL, REMOTE USER NOT CONNECTED\n\n");
         return -1;
     }
-    else if(resultado <= -4){
+    else if(resultado >= 4){
         perror("LISTCONTENT FAIL\n\n");
         return -1;
     }
@@ -866,7 +891,7 @@ int get_file(char * username, char * username_solicitante, char * remote_filenam
     int * port_dest = NULL;
 
     int resultado_servidor = comunicacion_servidor(&peticion, &ip_dest, &port_dest);
-    if (resultado_servidor < 0){
+    if (resultado_servidor != 0){
         perror("GETFILE FAIL\n\n");
         return -1;
     }
@@ -876,11 +901,11 @@ int get_file(char * username, char * username_solicitante, char * remote_filenam
     free(ip_dest);
     free(port_dest);
 
-    if(resultado == -10){
+    if(resultado == 10){
         perror("GETFILE FAIL, FILE DOES NOT EXIST\n\n");
         return -1;
     }
-    else if(resultado <= -1){
+    else if(resultado == 1){
         perror("GETFILE FAIL\n\n");
         return -1;
     }

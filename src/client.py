@@ -62,9 +62,7 @@ class client:
 
     _port = -1
 
-    username_conectado = None
-
-
+    username_conectado = "".encode("utf-8")
 
     # ******************** METHODS *******************
 
@@ -160,7 +158,7 @@ class client:
 
         result = claves.disconnect(username, fecha_hora)
 
-        client.username_conectado = None
+        client.username_conectado = "".encode("utf-8")
 
         if (result == 0) :
 

@@ -308,7 +308,7 @@ void recibir_socket(int *socket_cliente_descriptor){
             conexion = is_connected(peticion_local.username);
             conexion2 = is_connected(peticion_local.username2);
             if(conexion2.error == -2){
-            respuesta = -3; 
+                respuesta = -3; 
             }
             else{
                 respuesta = conexion.error;
@@ -338,16 +338,15 @@ void recibir_socket(int *socket_cliente_descriptor){
             conexion = is_connected(peticion_local.username);
             conexion2 = is_connected(peticion_local.username2);
             if(conexion.error < 0){
-            respuesta = -1; 
+                respuesta = -1; 
             }
             else if(conexion2.error < 0){
-            respuesta = -1; 
+                respuesta = -1; 
             }
             else{
                 respuesta = 0;
             }
-
-            if(respuesta > 0){
+            if(respuesta >= 0){
                 Published published = is_published(peticion_local.filename1, conexion.exist.nodo_usuario->publicaciones);
                 if(published.error < 0){
                     respuesta = -1;
@@ -366,16 +365,21 @@ void recibir_socket(int *socket_cliente_descriptor){
     if(respuesta <= error){
         respuesta = error;
     }
-    res = htonl(respuesta);
+
+    if(respuesta < 0){
+        res = htonl(-respuesta);
+    }
+    else{
+        res = htonl(respuesta);
+    }
+    
     if(peticion_local.operacion == 6) { // Función listusers
-        if(respuesta < 0){
-            resp = 0;
-            if(sendMessage(socket_cliente_descriptor_local, (char*) &resp, sizeof(resp)) == -1) {
-                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
-                close(socket_cliente_descriptor_local);
-            }  
+        if(sendMessage(socket_cliente_descriptor_local, (char*) &res, sizeof(res)) == -1) {
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+            close(socket_cliente_descriptor_local);
         }
-        else{
+
+        if(respuesta >= 0){
             resp = base_datos->size;
             int32_t resp2 = htonl(resp);
             int32_t tot_size;
@@ -428,15 +432,11 @@ void recibir_socket(int *socket_cliente_descriptor){
 
     }
     else if(peticion_local.operacion == 7){ // Función listcontent
-        if(respuesta < 0){
-            resp = 0;
-            int32_t resp2 = htonl(resp);
-            if(sendMessage(socket_cliente_descriptor_local, (char*) &resp2, sizeof(resp2)) == -1) {
-                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
-                close(socket_cliente_descriptor_local);
-            }  
+        if(sendMessage(socket_cliente_descriptor_local, (char*) &res, sizeof(res)) == -1) {
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+            close(socket_cliente_descriptor_local);
         }
-        else{
+        if(respuesta >= 0){
             nodo = conexion.exist.nodo_usuario;
             if(nodo->publicaciones == NULL){
                 resp = 0;
@@ -480,13 +480,11 @@ void recibir_socket(int *socket_cliente_descriptor){
         }
     }
     else if(peticion_local.operacion == 8){ // Función getfile
-        if(respuesta < 0){
-            if(sendMessage(socket_cliente_descriptor_local, (char *) &res, sizeof(res)) == -1) {
-                perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
-                close(socket_cliente_descriptor_local);
-            }  
+        if(sendMessage(socket_cliente_descriptor_local, (char*) &res, sizeof(res)) == -1) {
+            perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
+            close(socket_cliente_descriptor_local);
         }
-        else{
+        if(respuesta >= 0){
             int32_t port_cl = htonl(conexion.exist.nodo_usuario->datos_conexion->port);
             if(sendMessage(socket_cliente_descriptor_local, (char *) &port_cl, sizeof(port_cl)) == -1) {
                 perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar la respuesta");
