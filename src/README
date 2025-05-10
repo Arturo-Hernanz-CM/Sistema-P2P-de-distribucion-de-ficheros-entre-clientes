@@ -1,0 +1,8 @@
+Para ejecutar el fichero hay que seguir los siguientes pasos:
+
+- Ejecutar "make" en la terminal
+- Lanzar el servidor rpc con el comando "./servidor_log"
+- En la misma terminal (si el paso previo se ha ejecutado con &) o en una diferente ejecutar el comando "env LOG_RCP_IP=localhost ./servidor -p <puerto>" para ejecutar el servidor.
+- En otra terminal diferente ejecutar el comando "pyhton3 ws-fechahora-service.py" para comenzar el servicio web.
+- En la misma terminal (si el paso anterior se ejecutó con &) o en una diferente ejecutar el comando "python3 client.py -s <ip del servidor> -p <puerto del servidor> "
+- Ejecutar los comandos.
