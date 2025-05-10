@@ -25,7 +25,7 @@ int ocupado = 0;
 int puerto_cliente;
 char ip_cliente[INET_ADDRSTRLEN];
 
-char * ip_rpc;
+char * ip_rpc = NULL;
 
 CLIENT *cliente = NULL;
 
@@ -594,13 +594,13 @@ int main(int argc, char **argv) {
         inet_ntop(AF_INET, &(addr->sin_addr), ip_servidor, INET_ADDRSTRLEN);
         freeaddrinfo(res);
     } else {
-        strpcy(ip_servidor, "Unknown");
+        strcpy(ip_servidor, "Unknown");
     }
 
     printf("s> init server %s:%d\n", ip_servidor, ntohs(socket_servidor.sin_port));
 
     // Asignar valor a la ip del rpc
-    ip_rpc = getenv("LOG_rpc_IP");
+    ip_rpc = getenv("LOG_RCP_IP");
 
     // Recibir conexiones
     while(1) {
