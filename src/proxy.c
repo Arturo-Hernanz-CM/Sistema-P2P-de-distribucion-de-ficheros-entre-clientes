@@ -626,10 +626,10 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
             return error;
         }
         respuesta = ntohl(res);
-        if (respuesta < 0) {
+        if (respuesta != 0) {
             perror("ERROR:\nFile: proxy.c\nFunction: comunicacion_servidor\nError: Error en la respuesta");
             close(socket_cliente_descriptor);
-            if(respuesta < error){
+            if(respuesta > error){
                 return error;
             }
             else{
