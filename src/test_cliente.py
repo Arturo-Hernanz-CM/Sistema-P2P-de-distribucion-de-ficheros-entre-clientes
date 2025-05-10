@@ -1,7 +1,7 @@
 from client import client
 
 # Configurar los parámetros del cliente
-client._server = "127.0.0.1"
+client._server = "163.117.142.41"
 client._port = 5850
 
 # Ejecutar funciones básicas
