@@ -500,6 +500,7 @@ int comunicacion_servidor(Peticion * peticion, char ** ip_dest, int ** port_dest
         return error;
     }
 
+    // Recibir una lista de informacion (list_users y list_content)
     if(peticion->operacion == 6 || peticion->operacion == 7){
         int fin_emit;
         int32_t fin_emit_, tot_size;

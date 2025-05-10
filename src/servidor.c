@@ -379,6 +379,7 @@ void recibir_socket(int *socket_cliente_descriptor){
             resp = base_datos->size;
             int32_t resp2 = htonl(resp);
             int32_t tot_size;
+            int total_size;
             
             if(sendMessage(socket_cliente_descriptor_local, (char*) &resp2, sizeof(resp2)) == -1) {
                 perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");
@@ -386,7 +387,14 @@ void recibir_socket(int *socket_cliente_descriptor){
             }  
             nodo = base_datos->inicio;
             for (int i = 0; i < resp; i++){
-                int total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + 6; // max 5 digits port + null
+
+                if(nodo->datos_conexion != NULL){
+                    total_size = strlen(nodo->username) + 1 + strlen(nodo->datos_conexion->ip) + 1 + 6; // max 5 digits port + null
+                }
+                else{
+                    total_size = strlen("\n") + 1;
+                }
+
                 user_ip_port = (char *) malloc(total_size);
                 if(user_ip_port == NULL){
                     perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: Error al reservar memoria");
@@ -400,7 +408,13 @@ void recibir_socket(int *socket_cliente_descriptor){
                     free(user_ip_port);
                 }
 
-                snprintf(user_ip_port, total_size, "%s %s %d", nodo->username, nodo->datos_conexion->ip, nodo->datos_conexion->port);
+                if(nodo->datos_conexion != NULL){
+                    snprintf(user_ip_port, total_size, "%s %s %d", nodo->username, nodo->datos_conexion->ip, nodo->datos_conexion->port);
+
+                }
+                else{
+                    snprintf(user_ip_port, total_size, "%s", "\n");
+                }
 
                 if(sendMessage(socket_cliente_descriptor_local, user_ip_port, strlen(user_ip_port)+1) == -1) {
                     perror("\ns> ERROR:\nFile: servidor.c\nFunction: recibir_socket\nError: No se puede enviar el tamaño de la respuesta");

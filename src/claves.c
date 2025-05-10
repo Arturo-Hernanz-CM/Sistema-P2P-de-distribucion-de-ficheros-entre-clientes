@@ -98,11 +98,19 @@ int unregister(char* username){
     }
     else{
         // Eliminar el nodo
-        exist.nodo_usuario->anterior->siguiente = exist.nodo_usuario->siguiente;
-        if(exist.nodo_usuario->siguiente != NULL){
-            exist.nodo_usuario->siguiente->anterior = exist.nodo_usuario->anterior;
-            exist.nodo_usuario->siguiente->index = exist.nodo_usuario->index;
+        if(exist.nodo_usuario == base_datos->inicio){
+            base_datos->inicio = exist.nodo_usuario->siguiente;
+            base_datos->inicio->index = 0;
+            base_datos->inicio->anterior = NULL;
         }
+        else{
+            exist.nodo_usuario->anterior->siguiente = exist.nodo_usuario->siguiente;
+            if(exist.nodo_usuario->siguiente != NULL){
+                exist.nodo_usuario->siguiente->anterior = exist.nodo_usuario->anterior;
+                exist.nodo_usuario->siguiente->index = exist.nodo_usuario->index;
+            }
+        }
+        
         base_datos->size--;
         free(exist.nodo_usuario);
     }
