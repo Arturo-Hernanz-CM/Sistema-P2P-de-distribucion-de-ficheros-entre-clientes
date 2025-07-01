@@ -12,3 +12,4 @@ requests-toolbelt==1.0.0
 spyne==2.14.0
 urllib3==2.4.0
 zeep==4.3.1
+urlib==2.5.0
